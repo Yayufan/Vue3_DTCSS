@@ -17,7 +17,7 @@
             </el-icon>
           </el-button>
 
-          <el-button type="primary" @click="toggleAddDialog">
+          <el-button type="primary" @click="toggleInsertDialog">
             新增
             <el-icon class="el-icon--right">
               <Plus />
@@ -67,7 +67,7 @@
       </el-table>
 
       <!-- 新增對話框 -->
-      <ElDialog v-model="dialogFormVisible" title="新增標籤" width="400">
+      <ElDialog v-model="isInsertDialogVisible" title="新增標籤" width="400">
 
         <div class="tag-preview">
           <h4>預覽效果 :</h4>
@@ -78,7 +78,7 @@
           </div>
         </div>
 
-        <el-form :model="insertTagFormData" ref="form" :rules="insertTagRules">
+        <el-form :model="insertTagFormData" ref="form" :rules="tagRules">
           <el-form-item label="名稱" :label-width="formLabelWidth" prop="name">
             <el-input v-model="insertTagFormData.name" />
           </el-form-item>
@@ -86,6 +86,7 @@
           <el-form-item label="類別" :label-width="formLabelWidth" prop="type">
             <el-select v-model="insertTagFormData.type" placeholder="請選擇類別">
               <el-option label="會員" value="member" />
+              <el-option label="與會者" value="attendees" />
             </el-select>
           </el-form-item>
 
@@ -101,7 +102,7 @@
 
         <template #footer>
           <div class="dialog-footer">
-            <ElButton @click="dialogFormVisible = false">取消</ElButton>
+            <ElButton @click="isInsertDialogVisible = false">取消</ElButton>
             <ElButton type="primary" @click="submitInsertForm(form)">
               建立
             </ElButton>
@@ -120,7 +121,7 @@
             }}</el-tag>
           </div>
         </div>
-        <el-form label-position="top" label-width="auto" :model="updateTagForm" :rules="updateTagFormRules"
+        <el-form label-position="top" label-width="auto" :model="updateTagForm" :rules="tagRules"
           ref="updateTagFormRef">
 
           <el-form-item label="是否啟用" :label-width="formLabelWidth" prop="status">
@@ -155,40 +156,40 @@
         </template>
       </el-drawer>
 
-      <el-dialog v-if="addMemberDialogIsVisible" v-model="addMemberDialogIsVisible" title="新增會員"
+      <el-dialog v-if="assignTagDialogVisible" v-model="assignTagDialogVisible" :title="assignTagTitle"
         :before-close="cancelAdd">
-        <h3>標籤: <el-tag :color="addMemberTag.color" class="tag-box" round>{{ addMemberTag.name }}</el-tag></h3>
+        <h3>標籤: <el-tag :color="assignTag.color" class="tag-box" round>{{ assignTag.name }}</el-tag></h3>
 
         <div class="search-bar">
           <el-input v-model="input" style="width: 240px" placeholder="輸入內容,Enter查詢"
-            @keydown.enter="getMemberListByPagination(currentPage, 10)" />
-
-          <el-select v-model="filterStatus" style="width: 240px;" class="filter-status" placeholder="請選擇">
-            <el-option label="全選" value="">
-              <span>全選</span>
-            </el-option>
-            <el-option label="未審核" value="0">
-              <span>未審核</span>
-            </el-option>
-            <el-option label="審核通過" value="1">
-              <span style="color:green;">審核通過</span>
-            </el-option>
-            <el-option label="駁回申請" value="2">
-              <span style="color:red;">駁回申請</span>
-            </el-option>
-
-            <template #label="{ label, value }">
-              <span :style="{ color: value == '1' ? 'green' : value == '-1' ? 'red' : 'black' }">{{ label }}</span>
-            </template>
-          </el-select>
-
+            @input="getData(assignTag.type, assignTagCurrentPage)" />
         </div>
-        <el-table :data="allMemberList.records" ref="memberTableRef" :row-key="getRowKey" @select="handleMemberSelect"
-          empty-text="查無資料">
+        <el-table v-if="assignTag.type === 'member'" :data="allMemberList.records" ref="memberTableRef"
+          :row-key="getRowKey" @select="handleMemberSelect" empty-text="查無資料">
           <el-table-column type="selection" width="55" :reserve-selection="true" />
-          <el-table-column prop="name" label="名稱" />
+          <el-table-column prop="chineseName" label="名稱" />
           <el-table-column prop="email" label="Email" />
           <el-table-column prop="phone" label="電話" />
+        </el-table>
+
+        <el-table v-if="assignTag.type === 'attendees'" :data="attendeeList.records" ref="attendeeTableRef"
+          :row-key="getRowKey" @select="handleAttendeesSelect" empty-text="查無資料">
+          <el-table-column type="selection" width="55" :reserve-selection="true" />
+          <el-table-column prop="name" label="名稱">
+            <template #default="scope">
+              {{ scope.row.member.chineseName }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="email" label="Email">
+            <template #default="scope">
+              {{ scope.row.member.email }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="phone" label="電話">
+            <template #default="scope">
+              {{ scope.row.member.phone }}
+            </template>
+          </el-table-column>
         </el-table>
 
         <!-- 
@@ -196,15 +197,14 @@
       current-page當前頁數,官方建議使用v-model與current-page去與自己設定的變量做綁定,
     -->
         <div class="example-pagination-block member-pagination">
-          <el-pagination layout="prev, pager, next" :page-count="Number(allMemberList.pages)"
-            :default-page-size="Number(allMemberList.size)" v-model:current-page="memberCurrentPage"
-            :hide-on-single-page="true" />
+          <el-pagination layout="prev, pager, next" :page-count="Number(totalPage)"
+            v-model:current-page="assignTagCurrentPage" :hide-on-single-page="true" />
         </div>
 
         <template #footer>
           <div class="dialog-footer">
             <ElButton @click="cancelAdd">取消</ElButton>
-            <ElButton type="primary" @click="cliclAddMember">
+            <ElButton type="primary" @click="submitTagSet">
               保存
             </ElButton>
           </div>
@@ -218,7 +218,7 @@ import { addTagApi, assignMemberToTagApi, deleteTagApi, getAllTagsApi, getTagsBy
 import { getMemberByPaginationApi, getMemberByPaginationByStatusApi } from '@/api/member'
 import type { FormInstance, FormRules } from 'element-plus'
 import { typeEnums } from '@/enums/TypeEnum'
-import { s } from 'vite/dist/node/types.d-aGj9QkWt'
+import { assignTagToAttendeeApi, getAttendeeListByTagAndPaginationApi } from '@/api/attendee'
 
 const formLabelWidth = '70px'
 const route = useRoute()
@@ -227,11 +227,10 @@ const router = useRouter()
 
 
 //是否顯示表單dialog
-const dialogFormVisible = ref(false)
+const isInsertDialogVisible = ref(false)
 
-const toggleAddDialog = () => {
-  dialogFormVisible.value = true
-  console.log('觸發', dialogFormVisible.value)
+const toggleInsertDialog = () => {
+  isInsertDialogVisible.value = true
 }
 
 /** --------- 新增相關 --------------  */
@@ -246,7 +245,7 @@ const insertTagFormData = reactive({
   status: '0'
 })
 
-const insertTagRules = reactive({
+const tagRules = reactive({
   type: [
     { required: true, message: '請選擇類型', trigger: 'blur' }
   ],
@@ -257,16 +256,14 @@ const insertTagRules = reactive({
 
 //送出表單方法
 const submitInsertForm = (form: FormInstance | undefined) => {
-  //沒有抓到的這個Dom直接返回
   if (!form) return
   form.validate(async (valid) => {
     if (valid) {
       try {
         //呼叫父組件給的新增function API
-        let res = await addTagApi(insertTagFormData)
+        await addTagApi(insertTagFormData)
         ElMessage.success('新增成功');
-        // router.push(`${route.fullPath}`)
-        dialogFormVisible.value = false
+        isInsertDialogVisible.value = false
         getTagsByPagination(1, 10)
 
         form.resetFields()
@@ -290,15 +287,6 @@ const updateTagForm = reactive({
   description: '',
   color: '',
   status: 0
-})
-
-const updateTagFormRules = reactive({
-  type: [
-    { required: true, message: '請選擇類型', trigger: 'blur' }
-  ],
-  name: [
-    { required: true, message: '請輸入名稱', trigger: 'blur' }
-  ],
 })
 
 const editRow = (tag: any) => {
@@ -340,7 +328,6 @@ let tagsList = reactive<Record<string, any>>([])
 const getTagsByPagination = async (page: number, size: number) => {
   const res = await getTagsByPaginationApi(page, size)
   Object.assign(tagsList, res.data)
-  console.log(tagsList)
 }
 
 /** --------- 刪除相關variable及function -------------- */
@@ -397,11 +384,19 @@ const deleteList = () => {
 }
 
 /**-------------------查詢會員-------------------- */
-const addMemberDialogIsVisible = ref(false)
+const assignTagDialogVisible = ref(false)
+
+const assignTagTitle = ref('')
+
+
+
 
 const memberTableRef = ref()
+const attendeeTableRef = ref()
 
-const memberCurrentPage = ref(1)
+const assignTagCurrentPage = ref(1)
+const totalPage = ref(0)
+// const
 
 //查詢內容
 let input = ref('')
@@ -410,7 +405,7 @@ let input = ref('')
 let filterStatus = ref('')
 
 watch(filterStatus, (value, oldValue) => {
-  getMemberListByPagination(memberCurrentPage.value, 10)
+  getMemberListByPagination(assignTagCurrentPage.value, 10)
 })
 
 const resetQueryText = (): void => {
@@ -418,29 +413,65 @@ const resetQueryText = (): void => {
   input.value = ''
 }
 
-
-let addMemberTag = reactive({
+// 要設置的 Tag
+let assignTag = reactive({
   tagId: '',
+  type: '',
   name: '',
   description: '',
   color: '',
 })
 
-watch(memberCurrentPage, (value, oldValue) => {
-  getMemberListByPagination(value, 10)
+watch(assignTag, (value) => {
+  console.log("這是要設置的 Tag: ", value)
+  switch (value.type) {
+    case 'member':
+      assignTagTitle.value = '新增會員'
+      break
+    case 'attendees':
+      assignTagTitle.value = '新增與會者'
+      break
+  }
 })
+
+
+watch(assignTagCurrentPage, (value, oldValue) => {
+  getData(assignTag.type, value)
+})
+
+const getData = (option: string, page: number) => {
+  switch (option) {
+    case 'member':
+      console.log("獲取會員")
+      getMemberListByPagination(page, 10)
+      break
+    case 'attendees':
+      console.log("獲取與會者")
+      getAttendeeByPagination()
+      break
+  }
+}
 
 
 /** 開啟新增會員 Dialog */
 const toggleMemberDialog = (tag: any) => {
-  addMemberDialogIsVisible.value = true
-  Object.assign(addMemberTag, tag) // 獲取要新增的標籤
-  getMemberListByPagination(1, 10)
+  assignTagDialogVisible.value = true
+  Object.assign(assignTag, tag) // 獲取要新增的標籤
+  getData(tag.type, assignTagCurrentPage.value)
 }
 
 
 const getRowKey = (row: any) => {
-  return row.memberId
+  switch (assignTag.type) {
+    case 'member':
+      return row.memberId
+    case 'attendees':
+      return row.attendeesId
+  }
+
+
+
+  // return row.memberId
 }
 
 // 1. 獲取該分頁所有 member 
@@ -456,6 +487,7 @@ const getMemberListByPagination = async (page: number, size: number) => {
   };
   // submitMemeberSet.clear()
   Object.assign(allMemberList, res.data)
+  totalPage.value = res.data.pages
 
   /** 確認獲取到 table */
   if (!memberTableRef.value) return;
@@ -466,13 +498,67 @@ const getMemberListByPagination = async (page: number, size: number) => {
 
   /** 判斷獲得的回傳資料是否已擁有該 tag 或是目前已經新增至已勾選的 set 內 */
   res.data.records.forEach((record: any) => {
-    if ((record.tagSet && record.tagSet.some((tag: any) => tag.tagId === addMemberTag.tagId)) || submitMemeberSet.has(record.memberId)) {
+    if ((record.tagSet && record.tagSet.some((tag: any) => tag.tagId === assignTag.tagId)) || submitMemeberSet.has(record.memberId)) {
       memberTableRef.value.toggleRowSelection(record, true);
       /** 新增預設勾選資料進 set 內 */
       submitMemeberSet.add(record.memberId)
     }
   })
 }
+
+
+/**----------------------------與會者-------------------------------- */
+let attendeeList = reactive<any>([]);
+let attendeeIdSet = new Set(); // 儲存不重複的ID值
+
+const getAttendeeByPagination = async () => {
+  try {
+    let res = await getAttendeeListByTagAndPaginationApi(assignTagCurrentPage.value, input.value)
+    attendeeIdSet.clear() // 清空 set 內的資料
+    attendeeList.length = 0 // 清空 attendeeList 內的資料
+    Object.assign(attendeeList, res.data)
+    console.log("這是與會者列表: ", attendeeList)
+
+    /** 確認獲取到 table */
+    if (!attendeeTableRef.value) return;
+    attendeeTableRef.value.clearSelection(); // 清空選擇的資料
+    res.data.records.forEach((record: any) => {
+      if ((record.tagSet && record.tagSet.some((tag: any) => tag.tagId === assignTag.tagId)) || attendeeIdSet.has(record.attendeesId)) {
+        attendeeTableRef.value.toggleRowSelection(record, true);
+        /** 新增預設勾選資料進 set 內 */
+        attendeeIdSet.add(record.attendeesId)
+      }
+    })
+
+
+  } catch (err: any) {
+    console.log(err)
+    ElMessage.error('查詢失敗', err.message)
+  }
+}
+
+const handleAttendeesSelect = (selection: any, row: any) => {
+  if (selection.some((item: any) => item.attendeesId === row.attendeesId)) {
+    attendeeIdSet.add(row.attendeesId)
+  } else {
+    attendeeIdSet.delete(row.attendeesId)
+  }
+  console.log("attendeeIdSet :", attendeeIdSet)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /** 處理勾選
  * @param selection: 全部已勾選資料
@@ -494,14 +580,14 @@ const cliclAddMember = async () => {
    *  targetMemberIdList: 所有含有這個 tag 的 member
    */
   let data = {
-    tagId: addMemberTag.tagId,
+    tagId: assignTag.tagId,
     targetMemberIdList: Array.from(submitMemeberSet)
   }
   try {
     await assignMemberToTagApi(data)
     ElMessage.success('保存成功')
-    addMemberDialogIsVisible.value = false
-    memberCurrentPage.value = 1
+    assignTagDialogVisible.value = false
+    assignTagCurrentPage.value = 1
     submitMemeberSet.clear()
     resetQueryText()
   } catch (err: any) {
@@ -509,8 +595,50 @@ const cliclAddMember = async () => {
   }
 }
 
+const submitTagSet = async () => {
+  let data;
+  switch (assignTag.type) {
+    case 'member':
+      data = {
+        tagId: assignTag.tagId,
+        targetMemberIdList: Array.from(submitMemeberSet)
+      }
+
+      try {
+        await assignMemberToTagApi(data)
+        ElMessage.success('保存成功')
+        assignTagDialogVisible.value = false
+        assignTagCurrentPage.value = 1
+        submitMemeberSet.clear()
+        resetQueryText()
+      } catch (err: any) {
+        console.log(err)
+      }
+      break
+    case 'attendees':
+      data = {
+        tagId: assignTag.tagId,
+        targetAttendeesIdList: Array.from(attendeeIdSet)
+      }
+
+      try {
+        await assignTagToAttendeeApi(data)
+        ElMessage.success('保存成功')
+        assignTagDialogVisible.value = false
+        assignTagCurrentPage.value = 1
+        attendeeIdSet.clear()
+        resetQueryText()
+      } catch (err: any) {
+        console.log(err)
+      }
+      break
+  }
+}
+
+
+
 const cancelAdd = () => {
-  addMemberDialogIsVisible.value = false
+  assignTagDialogVisible.value = false
   submitMemeberSet.clear()
   resetQueryText();
 }
@@ -518,7 +646,7 @@ const cancelAdd = () => {
 /**-------------------掛載頁面時執行-------------------- */
 
 onMounted(() => {
-  getMemberListByPagination(1, 10)
+  // getMemberListByPagination(1, 10)
   getTagsByPagination(1, 10)
 })
 </script>

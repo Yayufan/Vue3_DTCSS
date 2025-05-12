@@ -2,22 +2,18 @@
 <template>
   <section class="member-section">
     <el-card class="member-card">
-      <h1>繳費確認審核</h1>
+      <h1>與會者列表</h1>
 
       <!-- 如果要用兩種註冊方式再考慮使用這個 -->
       <div class="function-bar">
         <div class="display-count">
-          未審核人數為： {{ memberCount }} 人
+          與會人數為： {{ attendeeList.total }} 人
         </div>
         <div class="btn-box">
-          <el-button type="primary" @click="approvalList" :disabled="selectList.length > 0 ? false : true">
-            批量通過<el-icon class="el-icon--right">
-              <Plus />
-            </el-icon>
-          </el-button>
 
-          <el-button type="danger" @click="failedList" :disabled="selectList.length > 0 ? false : true">
-            批量駁回<el-icon class="el-icon--right">
+
+          <el-button type="danger" @click="deleteAttendeeList" :disabled="selectList.length > 0 ? false : true">
+            批量刪除<el-icon class="el-icon--right">
               <Delete />
             </el-icon>
           </el-button>
@@ -25,31 +21,65 @@
       </div>
 
       <div class="search-bar">
-        <el-input v-model="input" style="width: 240px" placeholder="輸入內容,Enter查詢"
-          @keydown.enter="getMember(currentPage, 10)" />
+        <el-input v-model="input" style="width: 240px" placeholder="輸入內容,Enter查詢" @input="getAttendeeList()" />
       </div>
 
-      <el-table class="news-table" :data="memberList.records" @selection-change="handleSelectionChange">
+      <el-table class="news-table" :data="attendeeList.records" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
-        <el-table-column fixed prop="lastName" label="姓氏" width="90" />
-        <el-table-column fixed prop="firstName" label="名字" width="90" />
-
-        <el-table-column prop="email" label="信箱" />
-        <el-table-column prop="phone" label="手機" width="140" />
-        <el-table-column prop="country" label="國家" width="100" />
-        <el-table-column prop="remitAccountLast5" label="帳號末五碼" width="100" />
-
-        <el-table-column fixed="right" label="操作" width="150">
-          <!-- 透過#default="scope" , 獲取到當前的對象值 , scope.row則是拿到當前那個row的數據  -->
+        <el-table-column fixed prop="lastName" label="姓氏" width="90">
           <template #default="scope">
-            <el-button type="primary" size="small" @click="approvalRow(scope.row)">
-              通過
-            </el-button>
-            <!-- <el-button type="danger" size="small" @click="failedRow(scope.row)">
-              不通過
-            </el-button> -->
+            {{ scope.row.member.chineseName }}
           </template>
         </el-table-column>
+
+        <el-table-column fixed prop="lastName" label="身分證" width="190">
+          <template #default="scope">
+            {{ scope.row.member.idCard }}
+          </template>
+        </el-table-column>
+        <el-table-column fixed prop="lastName" label="飲食偏好" width="100">
+          <template #default="scope">
+            {{ scope.row.member.food }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="email" label="信箱">
+          <template #default="scope">
+            {{ scope.row.member.email }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="phone" label="手機" width="140">
+          <template #default="scope">
+            {{ scope.row.member.phone }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="tagSet" label="標籤" min-width="40" align="center">
+          <template #default="scope">
+            <el-popover v-if="scope.row.tagSet.length > 0" placement="left-start" title="標籤" :width="200"
+              trigger="hover">
+              <template #reference>
+                <el-tag v-if="findFirstVaildTag(scope.row.tagSet)" size="large" round
+                  :color="findFirstVaildTag(scope.row.tagSet).color" effect="light">{{
+                    findFirstVaildTag(scope.row.tagSet).name }}</el-tag>
+              </template>
+              <template #default>
+                <div v-for="tag in scope.row.tagSet" :key="tag.tagId" class="tag-item">
+                  <el-tag v-if="tag.status === 0" size="large" round :color="tag.color">{{
+                    tag.name }}</el-tag>
+                </div>
+              </template>
+            </el-popover>
+
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="150" align="center">
+          <template #default="scope">
+            <el-button link type="danger" @click="deleteAttendee(scope.row.attendeesId)">Delete</el-button>
+          </template>
+
+        </el-table-column>
+
       </el-table>
 
 
@@ -58,8 +88,9 @@
       current-page當前頁數,官方建議使用v-model與current-page去與自己設定的變量做綁定,
     -->
       <div class="example-pagination-block news-pagination">
-        <el-pagination layout="prev, pager, next" :page-count="Number(memberList.pages)"
-          :default-page-size="Number(memberList.size)" v-model:current-page="currentPage" :hide-on-single-page="true" />
+        <el-pagination layout="prev, pager, next" :page-count="Number(attendeeList.pages)"
+          :default-page-size="Number(attendeeList.size)" v-model:current-page="currentPage"
+          :hide-on-single-page="true" />
       </div>
 
 
@@ -73,9 +104,9 @@ import { ref, reactive } from 'vue'
 import { Delete, Plus } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 
-import { getMemberOrder, getMemberCountByOrderStatusApi, updateMemberApi, batchUpdateMemberApi, } from '@/api/member'
 
 import { updateOrdersApi } from '@/api/order'
+import { batchDeleteAttendeesApi, deleteAttendeeApi, getAttendeeListByTagAndPaginationApi } from '@/api/attendee'
 
 
 //獲取路由
@@ -98,46 +129,12 @@ let memberCount = ref(0)
 let input = ref('')
 
 
-//獲取未審核的同意書List
-let memberList = reactive<Record<string, any>>({
-  records: [{
-    memberId: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    country: "",
-    category: 0,
-    affiliation: "",
-    jobTitle: "",
-    phone: "",
-    remitAccountLast5: "",
-    ordersList: [
-      {
-        ordersId: "",
-        memberId: "",
-        itemsSummary: "",
-        totalAmount: 0,
-        status: 0,
 
-      }
-    ]
-  }]
-})
-
-const getMember = async (page: number, size: number) => {
-  let res = await getMemberOrder(page, size, "1", input.value)
-  Object.assign(memberList, res.data)
-}
-
-const getMemberCount = async () => {
-  let res = await getMemberCountByOrderStatusApi("1")
-  memberCount.value = res.data
-}
 
 
 //監聽當前頁數的變化,如果有更動就call API 獲取數組數據
 watch(currentPage, (value, oldValue) => {
-  getMember(value, 10)
+  getAttendeeList()
 })
 
 /** --------- 審核通過/駁回 相關variable及function -------------- */
@@ -152,61 +149,7 @@ const handleSelectionChange = (val: any) => {
   Object.assign(selectList, val)
 }
 
-//駁回同意書申請
-const failedRow = (member: any): void => {
-  ElMessageBox.confirm(`確定要駁回此申請嗎？`, '確認廢除', {
-    confirmButtonText: '確定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
 
-    Object.assign(updateMemberRegistrationFeeOrder, member)
-    //將審核狀態更改為駁回
-    updateMemberRegistrationFeeOrder.status = "3"
-
-    // 用户選擇確認，繼續操作
-    await updateMemberApi(updateMemberRegistrationFeeOrder)
-    ElMessage.success('廢除成功');
-
-    getMember(1, 10)
-
-  }).catch((err) => {
-    console.log(err)
-  });
-}
-
-//批量駁回同意書申請的function
-const failedList = () => {
-  if (selectList.length >= 1) {
-    ElMessageBox.confirm(`確定要駁回${selectList.length}個申請嗎？`, '確認駁回', {
-      confirmButtonText: '確定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(async () => {
-
-      //從List 中透過map方法映射資料, 修改status狀態 和 donateOrgans轉為array 並傳給後端
-      let transData = selectList.map(item => {
-        return {
-          ...(item),
-          status: "2",
-          // donateOrgans: item.donateOrgans ? item.donateOrgans.split(",") : [] // 確保 donateOrgans 存在
-        };
-      })
-
-      await batchUpdateMemberApi(transData)
-      ElMessage.success("批量審核駁回")
-
-
-      getMember(1, 10)
-
-    }).catch((err) => {
-      console.log(err)
-    })
-
-  } else {
-    ElMessage.error("請至少勾選一筆資料進行刪除")
-  }
-}
 
 
 /**------------編輯內容相關操作---------------------- */
@@ -215,58 +158,82 @@ let updateMemberRegistrationFeeOrder = reactive<Record<string, any>>({
 
 })
 
-//會員審核通過
-const approvalRow = async (member: any) => {
+const attendeeList = reactive<any>([])
 
-  console.log("這是Member的註冊費訂單: ", member.ordersList[0])
+const getAttendeeList = async () => {
+  let res = await getAttendeeListByTagAndPaginationApi(currentPage.value, input.value)
+  console.log("這是與會者列表: ", res)
 
-  Object.assign(updateMemberRegistrationFeeOrder, member.ordersList[0])
-  // //將審核狀態更改為通過(付款成功)
-  updateMemberRegistrationFeeOrder.status = "2"
-
-  try {
-    await updateOrdersApi(updateMemberRegistrationFeeOrder)
-    ElMessage.success("審核通過")
-    getMember(currentPage.value, 10)
-
-  } catch (err) {
-    console.log(err)
-  }
-
+  Object.assign(attendeeList, res.data)
 }
 
-const approvalList = async () => {
-  if (selectList.length >= 1) {
-
-    //從List 中透過map方法映射資料, 修改status狀態 和 donateOrgans轉為array 並傳給後端
-    let transData = selectList.map(item => {
-      return {
-        ...(item),
-        status: "1",
-      };
-    })
-
-    try {
-      await batchUpdateMemberApi(transData)
-      ElMessage.success("批量審核通過")
-      getMember(currentPage.value, 10)
-
-    } catch (err) {
-      console.log(err)
+const findFirstVaildTag = (tagSet: any) => {
+  for (let i = 0; i < tagSet.length; i++) {
+    if (tagSet[i].status === 0) {
+      return tagSet[i];
     }
-  } else {
-    ElMessage.error("請至少勾選一筆資料進行操作")
   }
-
+  return '';
 }
+/**------------------刪除資料---------------------- */
+const deleteAttendee = async (attendeesId: number) => {
+  try {
+    await ElMessageBox.confirm('確定要刪除這個與會者嗎?', '提示', {
+      confirmButtonText: '確定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await deleteAttendeeApi(attendeesId)
+    getAttendeeList()
+    ElMessage.success('刪除成功')
+  } catch (error) {
+    if (error === 'cancel') {
+      ElMessage.info('已取消刪除')
+      return
+    }
+    console.error("刪除與會者失敗: ", error)
+    ElMessage.error('刪除失敗')
+    return
+  }
+}
+
+// 批量刪除
+const deleteAttendeeList = async () => {
+  selectList = selectList.map((item: any) => item.attendeesId)
+  try {
+    await ElMessageBox.confirm('確定要批量刪除這些與會者嗎?', '提示', {
+      confirmButtonText: '確定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await batchDeleteAttendeesApi(selectList)
+    getAttendeeList()
+    ElMessage.success('批量刪除成功')
+  } catch (error) {
+    if (error === 'cancel') {
+      ElMessage.info('已取消批量刪除')
+      return
+    }
+    console.error("批量刪除與會者失敗: ", error)
+    ElMessage.error('批量刪除失敗')
+    return
+  }
+}
+
+
+
+
+
+
+
 
 
 
 /**-------------------掛載頁面時執行-------------------- */
 
 onMounted(() => {
-  getMemberCount()
-  getMember(1, 10)
+
+  getAttendeeList()
 })
 
 
@@ -348,5 +315,10 @@ onMounted(() => {
     margin-bottom: 16px;
   }
 
+}
+
+:deep(.el-tag__content) {
+  color: white;
+  font-size: 14px;
 }
 </style>

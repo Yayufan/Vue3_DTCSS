@@ -14,11 +14,11 @@
 
         <div class="btn-box">
 
-          <!-- <el-button type="primary" @click="toggleAddDialog">
+          <el-button type="primary" @click="toggleAddDialog">
             新增<el-icon class="el-icon--right">
               <Plus />
             </el-icon>
-          </el-button> -->
+          </el-button>
 
           <el-button type="danger" @click="deleteList" :disabled="deleteSelectList.length > 0 ? false : true">
             刪除<el-icon class="el-icon--right">
@@ -34,45 +34,19 @@
         <el-input v-model="input" style="width: 240px" placeholder="輸入內容,Enter查詢"
           @keydown.enter="getMemberByPagination(currentPage, 10)" />
 
-        <el-select v-model="filterStatus" style="width: 240px;" class="filter-status" placeholder="請選擇">
-          <el-option label="全選" value="">
-            <span>全選</span>
-          </el-option>
-          <el-option label="未審核" value="0">
-            <span>未審核</span>
-          </el-option>
-          <el-option label="審核通過" value="1">
-            <span style="color:green;">審核通過</span>
-          </el-option>
-          <el-option label="駁回申請" value="2">
-            <span style="color:red;">駁回申請</span>
-          </el-option>
-
-          <template #label="{ label, value }">
-            <span :style="{ color: value == '1' ? 'green' : value == '-1' ? 'red' : 'black' }">{{ label }}</span>
-          </template>
-        </el-select>
 
       </div>
 
       <el-table class="member-table" :data="memberList.records" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
 
-        <el-table-column fixed prop="firstName" label="名字" width="90" />
-        <el-table-column fixed prop="lastName" label="姓氏" width="90" />
+
+        <el-table-column prop="chineseName" label="姓名" width="100"></el-table-column>
         <el-table-column prop="email" label="信箱" />
-        <el-table-column prop="country" label="國家" />
-        <el-table-column prop="remitAccountLast5" label="帳戶後五碼" width="100" />
+        <el-table-column prop="phone" label="手機號碼" width="150" />
 
 
-        <el-table-column prop="status" label="繳費狀態" width="80">
-          <template #default="scope">
-            <span v-if="scope.row.status == '1'" style="color: green;">已繳費-待確認</span>
-            <span v-else-if="scope.row.status == '2'" style="color: green;">繳費成功</span>
-            <span v-else-if="scope.row.status == '3'" style="color: green;">繳費失敗</span>
-            <span v-else>未繳費</span>
-          </template>
-        </el-table-column>
+
 
         <el-table-column prop="tagSet" label="標籤" min-width="40" align="center">
           <template #default="scope">
@@ -152,60 +126,46 @@
         </template>
 
         <template #default>
-          <el-form label-position="top" label-width="auto" :model="updateMemberForm" :rules="updateMemberFormRules"
-            ref="updateMemberFormRef">
+          <el-form label-position="top" label-width="auto" :model="updateMemberForm" ref="updateMemberFormRef">
 
-            <el-form-item label="E-Mail" prop="email">
-              <el-input v-model="updateMemberForm.email" />
+            <el-form-item label="姓名" prop="chineseName" :rules="formRulesTW.chineseName">
+              <el-input v-model="updateMemberForm.chineseName" placeholder="請輸入密碼" />
             </el-form-item>
 
-            <el-form-item label="名字" prop="firstName">
-              <el-input v-model="updateMemberForm.firstName" />
+            <el-form-item label="身分證" prop="idCard" :rules="formRulesTW.idCard">
+              <el-input v-model="updateMemberForm.idCard" />
             </el-form-item>
 
-            <el-form-item label="姓氏" prop="lastName">
-              <el-input v-model="updateMemberForm.lastName" />
+            <el-form-item label="E-Mail" prop="email" :rules="formRulesTW.email">
+              <el-input disabled v-model="updateMemberForm.email" />
             </el-form-item>
 
-            <el-form-item label="國家" prop="country">
-              <el-input v-model="updateMemberForm.country" />
-            </el-form-item>
-
-            <el-form-item label="帳號末五碼" prop="remitAccountLast5">
-              <el-input v-model="updateMemberForm.remitAccountLast5" />
-            </el-form-item>
-
-            <el-form-item label="單位" prop="affiliation">
+            <el-form-item label="單位" prop="affiliation" :rules="formRulesTW.affiliation">
               <el-input v-model="updateMemberForm.affiliation">
               </el-input>
             </el-form-item>
 
-            <el-form-item label="職稱" prop="jobTitle">
+            <el-form-item label="職稱" prop="jobTitle" :rules="formRulesTW.jobTitle">
               <el-input v-model="updateMemberForm.jobTitle" />
             </el-form-item>
 
-            <el-form-item label="連絡電話" prop="phone">
-              <el-input v-model="updateMemberForm.phone" />
+            <el-form-item label="連絡電話" prop="phone" :rules="formRulesTW.phone">
+              <el-input disabled v-model="updateMemberForm.phone" />
             </el-form-item>
 
-            <el-form-item label="審核狀態" prop="status">
-              <el-select v-model="updateMemberForm.status" placeholder="Select" style="width: 240px;">
-                <el-option label="未審核" value="0">
-                  <span>未審核</span>
-                </el-option>
-                <el-option label="審核通過" value="1">
-                  <span style="color:green;">審核通過</span>
-                </el-option>
-                <el-option label="駁回申請" value="2">
-                  <span style="color:red;">駁回申請</span>
-                </el-option>
-
-                <template #label="{ label, value }">
-                  <span :style="{ color: value == '1' ? 'green' : value == '-1' ? 'red' : 'black' }">{{ label }}</span>
-                </template>
-              </el-select>
-
+            <el-form-item label="飲食偏好" prop="dietaryPreference">
+              <el-radio-group v-model="updateMemberForm.food" placeholder="Select" style="width: 240px;">
+                <el-radio label="葷食" value="葷">
+                </el-radio>
+                <el-radio label="素食" value="素">
+                </el-radio>
+              </el-radio-group>
             </el-form-item>
+
+            <el-form-item label="飲食禁忌" prop="foodTaboo">
+              <el-input v-model="updateMemberForm.foodTaboo" placeholder="請輸入飲食禁忌" />
+            </el-form-item>
+
 
           </el-form>
         </template>
@@ -220,6 +180,51 @@
 
       </el-drawer>
     </el-card>
+    <!-- Insert Form -->
+    <el-dialog class="insert-dialog" v-model="dialogFormVisible" width="500">
+      <el-form class="insert-form" ref="form" :model="insertForm" label-position="top">
+        <el-form-item class="insert-name" label="姓名" prop="chineseName" :rules="formRulesTW.chineseName">
+          <el-input v-model="insertForm.chineseName" placeholder="請輸入姓名" />
+        </el-form-item>
+        <el-form-item class="" label="電子信箱" prop="email" :rules="formRulesTW.email">
+          <el-input v-model="insertForm.email" type="email" placeholder="請輸入E-mail" />
+        </el-form-item>
+        <el-form-item class="" label="單位" prop="affiliation" :rules="formRulesTW.affiliation">
+          <el-input v-model="insertForm.affiliation" placeholder="單位" />
+        </el-form-item>
+        <el-form-item class="" label="職稱" prop="jobTitle" :rules="formRulesTW.jobTitle">
+          <el-input v-model="insertForm.jobTitle" placeholder="職稱" />
+        </el-form-item>
+        <el-form-item class="" label="身分證" prop="idCard" :rules="formRulesTW.idCard">
+          <el-input v-model="insertForm.idCard" placeholder="身分證" />
+        </el-form-item>
+        <div class="phone-num-box">
+          <el-form-item class="" label="電話號碼" prop="countryCode" :rules="formRulesTW.countryCode">
+            <el-input class="country-code-input" v-model="insertForm.countryCode" disabled placeholder="國家代碼" />
+          </el-form-item>
+          <el-form-item class="" label="" prop="phone" :rules="formRulesTW.phone">
+            <el-input class="phone-input" v-model="insertForm.phone" placeholder="電話號碼"></el-input>
+          </el-form-item>
+        </div>
+        <el-form-item class="" label="飲食偏好" prop="food">
+          <el-radio-group v-model="insertForm.food" placeholder="Select" style="width: 240px;">
+            <el-radio label="葷食" value="葷">
+            </el-radio>
+            <el-radio label="素食" value="素">
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item class="" label="飲食禁忌" prop="foodTaboo">
+          <el-input type="textarea" v-model="insertForm.foodTaboo" placeholder="請輸入飲食禁忌" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div style="flex: auto">
+          <el-button @click="dialogFormVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitInsertForm(form)">送出</el-button>
+        </div>
+      </template>
+    </el-dialog>
 
   </section>
 
@@ -229,30 +234,31 @@
 
 import { ref, reactive } from 'vue'
 import { Delete, Plus } from '@element-plus/icons-vue'
-import { scrollbarProps, type FormInstance, type FormRules } from 'element-plus'
-import { getMemberByPaginationByStatusApi, getMemberCountApi, updateMemberApi, deleteMemberApi, batchDeleteMemberApi, downloadMemberExcelApi, assignTagsToMember } from '@/api/member'
+import type { FormInstance } from 'element-plus'
+import { getMemberByPaginationByStatusApi, getMemberCountApi, updateMemberApi, deleteMemberApi, batchDeleteMemberApi, downloadMemberExcelApi, assignTagsToMember, addMemberByAdminApi } from '@/api/member'
 import { getAllTagsApi } from '@/api/tag'
 
+import type { memberRecordType } from '@/api/member/type.ts'
+import type { returnType } from '@/api/type'
+
+import { formRulesTW } from '@/utils/checkSum'
 
 
-
+/**================================================== */
 const downloadExcel = async () => {
-  let res = await downloadMemberExcelApi()
-  console.log(res)
-  const url = window.URL.createObjectURL(new Blob([res.data]));
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', '會員列表.xlsx');
-  document.body.appendChild(link);
-  link.click();
+  try {
+    let res = await downloadMemberExcelApi()
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', '會員列表.xlsx');
+    document.body.appendChild(link);
+    link.click();
+  } catch (error) {
+    ElMessage.error("下載失敗" + error)
+  }
 }
-
-//獲取路由
-const route = useRoute()
-//獲取路由器
-const router = useRouter()
-//formLabel 寬度
-const formLabelWidth = '140px'
+/**================================================== */
 
 //查詢內容
 let input = ref('')
@@ -261,7 +267,7 @@ let input = ref('')
 let filterStatus = ref('')
 
 //獲取同意書總數
-let memberCount = ref(0)
+let memberCount = ref<number>(0)
 
 
 
@@ -269,27 +275,34 @@ let memberCount = ref(0)
 
 
 const getMemberCount = async () => {
-  let res = await getMemberCountApi()
-  memberCount.value = res.data
-}
-
-const setTagEffect = (status: number) => {
-  if (status === 1) {
-    console.log('dark')
-    return 'light'
+  try {
+    let res = await getMemberCountApi()
+    memberCount.value = res.data
+  } catch (err) {
+    console.log(err)
+    ElMessage.error("獲取會員數量失敗")
   }
 }
 
 
-//獲取會員List
 
-let memberList = reactive<Record<string, any>>({
+let memberList = reactive<Record<string, memberRecordType[]>>({
   records: [{
-    memberId: 0,
+    memberId: "",
     email: "",
+    chineseName: "",
     firstName: "",
     lastName: "",
     country: "",
+    idCard: "",
+    group: "",
+    food: "",
+    title: "",
+    receipt: "",
+    category: "",
+    categoryExtra: "",
+    foodTaboo: "",
+    groupRole: "",
     remitAccountLast5: "",
     affiliation: "",
     jobTitle: "",
@@ -300,14 +313,18 @@ let memberList = reactive<Record<string, any>>({
 })
 
 //設定分頁組件,currentPage當前頁數
-let currentPage = ref(1)
+let currentPage = ref<number>(1)
 
 
 
-const getMemberByPagination = async (page: number, size: number) => {
-  let res = await getMemberByPaginationByStatusApi(page, size, filterStatus.value, input.value)
-  Object.assign(memberList, res.data)
-  console.log(res.data.records)
+const getMemberByPagination = async (page: number, size: number): Promise<void> => {
+  try {
+    let res = await getMemberByPaginationByStatusApi(page, size, filterStatus.value, input.value)
+    Object.assign(memberList, res.data)
+  } catch (err) {
+    console.log(err)
+    ElMessage.error("獲取會員資料失敗")
+  }
 }
 
 
@@ -376,51 +393,6 @@ const deleteList = () => {
 
 /**-------------表單相關variable及function------------------------- */
 
-//是否顯示表單dialog
-const dialogFormVisible = ref(false)
-
-//表單實例
-const form = ref()
-
-//表單數據
-const insertMemberFormData = reactive({
-  email: '',
-  password: '',
-  name: '',
-  department: '',
-  jobTitle: '',
-  phone: '',
-})
-
-
-//顯示新增Dialog
-const toggleAddDialog = () => {
-  dialogFormVisible.value = true
-}
-
-//送出表單方法
-const submitInsertForm = (form: FormInstance | undefined) => {
-  //沒有抓到的這個Dom直接返回
-  if (!form) return
-  form.validate(async (valid) => {
-    if (valid) {
-      try {
-        //呼叫父組件給的新增function API
-        // await addMemberApi(insertMemberFormData)
-        ElMessage.success('新增成功');
-        getMemberByPagination(currentPage.value, 10)
-
-      } catch (err: any) {
-        console.log(err)
-      }
-      //最終都將這個dialog關掉
-      dialogFormVisible.value = false
-
-    } else {
-      ElMessage.error("請完整填入資訊")
-    }
-  })
-}
 
 /**------------編輯內容相關操作---------------------- */
 
@@ -436,9 +408,16 @@ const cancelClick = () => {
 
 const updateMemberFormRef = ref()
 
-let updateMemberForm = reactive({
+let updateMemberForm = reactive<memberRecordType>({
   memberId: "",
+  group: "",
+  title: "",
+  receipt: "",
+  category: "",
+  categoryExtra: "",
+  groupRole: "",
   email: "",
+  chineseName: "",
   firstName: "",
   lastName: "",
   country: "",
@@ -447,76 +426,14 @@ let updateMemberForm = reactive({
   jobTitle: "",
   phone: "",
   status: "",
-
+  food: "",
+  foodTaboo: "",
+  idCard: "",
+  tagSet: [],
 })
 
 
-//編輯表單的校驗規則
-const updateMemberFormRules = reactive<FormRules>({
-  firstName: [
-    {
-      required: true,
-      message: '名字不能為空',
-      trigger: 'change',
-    },
-  ],
-  lastName: [
-    {
-      required: true,
-      message: '姓氏不能為空',
-      trigger: 'change',
-    },
-  ],
-  country: [
-    {
-      required: true,
-      message: '國家不能為空',
-      trigger: 'change',
-    },
-  ],
 
-  phone: [
-    {
-      required: true,
-      message: '手機號碼不能為空',
-      trigger: 'change',
-    }
-  ],
-  email: [
-    {
-      required: true,
-      message: 'E-mail不能為空',
-      trigger: 'change',
-    },
-    {
-      type: 'email',
-      message: '請輸入正確的E-mail格式',
-      trigger: 'change',
-    },
-  ],
-  affiliation: [
-    {
-      required: true,
-      message: '單位不能為空',
-      trigger: 'change',
-    },
-  ],
-  jobTitle: [
-    {
-      required: true,
-      message: '職稱不能為空',
-      trigger: 'change',
-    },
-  ],
-  status: [
-    {
-      required: true,
-      message: '請選擇審核狀態',
-      trigger: 'change',
-    },
-  ],
-
-})
 
 //drawer內,確認按鈕
 const confirmClick = async () => {
@@ -543,19 +460,6 @@ const editRow = (member: any): void => {
   drawer.value = true
 }
 
-const formatToMinguo = (dateString: string): string => {
-  const [year, month, day] = dateString.split('-');
-  const minguoYear = (Number(year) - 1911).toString();
-  return `${minguoYear}-${month}-${day}`;
-};
-
-const parseFromMinguo = (minguoString: string): string => {
-  const [minguoYear, month, day] = minguoString.split('-');
-  const year = (Number(minguoYear) + 1911).toString();
-  return `${year}-${month}-${day}`;
-};
-
-
 /**-------------------標籤-------------------- */
 let tagsDialogIsOpen = ref(false);
 let assignMember = reactive<any>({});
@@ -575,7 +479,6 @@ const getTagsList = async () => {
       color: item.color
     })
   })
-  console.log(transferDataList);
 }
 
 const findFirstVaildTag = (tagSet: any) => {
@@ -602,6 +505,65 @@ const submitTagsList = async () => {
   getMemberByPagination(currentPage.value, 10);
   tagsDialogIsOpen.value = false;
 }
+
+
+
+
+
+
+
+
+/**======================Insert Form============================= */
+const insertForm = reactive({
+  chineseName: '',
+  email: '',
+  affiliation: '',
+  jobTitle: '',
+  idCard: '',
+  countryCode: '886',
+  phone: '',
+  food: '葷',
+  foodTaboo: '',
+  category: '4',
+  country: 'Taiwan',
+})
+//是否顯示表單dialog
+const dialogFormVisible = ref(false)
+
+//表單實例
+const form = ref()
+
+//顯示新增Dialog
+const toggleAddDialog = () => {
+  dialogFormVisible.value = true
+}
+
+//送出表單方法
+const submitInsertForm = (form: FormInstance | undefined) => {
+  //沒有抓到的這個Dom直接返回
+  if (!form) return
+  form.validate(async (valid) => {
+    if (valid) {
+      try {
+        //呼叫父組件給的新增function API
+        await addMemberByAdminApi(insertForm)
+        ElMessage.success('新增成功');
+        getMemberByPagination(currentPage.value, 10)
+        form.resetFields()
+
+      } catch (err: any) {
+        console.log(err)
+      }
+      //最終都將這個dialog關掉
+      dialogFormVisible.value = false
+
+    } else {
+      ElMessage.error("請完整填入資訊")
+    }
+  })
+}
+
+
 
 
 

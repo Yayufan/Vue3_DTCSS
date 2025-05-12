@@ -15,11 +15,10 @@ import "virtual:svg-icons-register";
 
 // 样式
 import "element-plus/theme-chalk/dark/css-vars.css";
+import "element-plus/theme-chalk/el-notification.css";
 import "@/styles/index.scss";
 import "uno.css";
 import "animate.css";
-
-
 
 const app = createApp(App);
 // 全局注册 自定义指令(directive)
