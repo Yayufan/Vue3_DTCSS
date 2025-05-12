@@ -37,6 +37,11 @@
         @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
         <el-table-column fixed prop="name" label="名稱" width="200" />
+        <el-table-column fixed prop="type" label="類型" width="150">
+          <template #default="scope">
+            <el-tag v-if="scope.row.category === 'attendees'">與會者</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column fit prop="description" label="描述" />
         <el-table-column prop="createTime" label="創建時間" width="200" />
         <el-table-column prop="updateTime" label="修改時間" width="200" />
@@ -76,6 +81,12 @@
 
           <el-form-item label="名稱" :label-width="formLabelWidth" prop="name">
             <el-input v-model="insertEmailTemplateFormData.name" />
+          </el-form-item>
+
+          <el-form-item label="分類" :label-width="formLabelWidth" prop="category">
+            <el-select v-model="insertEmailTemplateFormData.category">
+              <el-option label="與會者" value="attendees" />
+            </el-select>
           </el-form-item>
 
           <el-form-item label="描述" :label-width="formLabelWidth" prop="description">
@@ -163,8 +174,8 @@ const deleteRow = (id: number): void => {
     type: 'warning'
   }).then(async () => {
     // 用户選擇確認，繼續操作
-    // await deleteEmailTemplateApi(id)
-    // getEmailTemplateByPagination(currentPage.value, 10)
+    await deleteEmailTemplateApi(id)
+    getEmailTemplateByPagination(currentPage.value, 10)
 
     ElMessage.success('刪除成功');
   }).catch((err) => {
@@ -207,6 +218,7 @@ const form = ref()
 //表單數據
 const insertEmailTemplateFormData = reactive({
   name: '',
+  category: 'attendees',
   description: '',
 })
 
@@ -216,6 +228,13 @@ const insertEmailTemplateRules = reactive<FormRules>({
     {
       required: true,
       message: '名稱不能為空',
+      trigger: 'blur',
+    }
+  ],
+  category: [
+    {
+      required: true,
+      message: '類型不能為空',
       trigger: 'blur',
     }
   ],

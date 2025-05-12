@@ -89,21 +89,29 @@ const getDataAndEditorLoaded = async () => {
   //   // Handle file upload here
   // })
 
+  let mergeTags = {}
+  switch (emailTemplate.category) {
+    case 'attendees':
+
+      mergeTags = {
+        name: {
+          name: '姓名',
+          value: '{{name}}',
+        },
+        QRcode: {
+          name: 'QRcode',
+          value: '{{QRcode}}',
+        },
+      }
+
+
+  }
+
   //當編輯器載入完成,解鎖save按鈕
   emailEditor.value.editor.addEventListener('editor:ready', function () {
     console.log('editor:ready')
 
-    emailEditor.value.editor.setMergeTags({
-
-      member_name: {
-        name: 'Member Name',
-        value: '{{memberName}}',
-      },
-      member_code: {
-        name: 'Member Code',
-        value: '{{memberCode}}',
-      },
-    });
+    emailEditor.value.editor.setMergeTags(mergeTags);
 
     isDisabled.value = false;
   });
