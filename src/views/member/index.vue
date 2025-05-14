@@ -32,7 +32,7 @@
 
       <div class="search-bar">
         <el-input v-model="input" style="width: 240px" placeholder="輸入內容,Enter查詢"
-          @keydown.enter="getMemberByPagination(currentPage, 10)" />
+          @input="getMemberByPagination(currentPage, 10)" />
 
 
       </div>

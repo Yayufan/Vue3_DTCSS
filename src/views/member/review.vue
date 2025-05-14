@@ -17,6 +17,9 @@
               <Delete />
             </el-icon>
           </el-button>
+          <el-button type="success" @click="downloadExcel">
+            下載Excel
+          </el-button>
         </div>
       </div>
 
@@ -106,7 +109,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 
 
 import { updateOrdersApi } from '@/api/order'
-import { batchDeleteAttendeesApi, deleteAttendeeApi, getAttendeeListByTagAndPaginationApi } from '@/api/attendee'
+import { batchDeleteAttendeesApi, deleteAttendeeApi, downloadAttendeeExcelApi, getAttendeeListByTagAndPaginationApi } from '@/api/attendee'
 
 
 //獲取路由
@@ -168,6 +171,7 @@ const getAttendeeList = async () => {
 }
 
 const findFirstVaildTag = (tagSet: any) => {
+  console.log("這是標籤: ", tagSet)
   for (let i = 0; i < tagSet.length; i++) {
     if (tagSet[i].status === 0) {
       return tagSet[i];
@@ -220,7 +224,20 @@ const deleteAttendeeList = async () => {
   }
 }
 
-
+/**------------------刪除資料---------------------- */
+const downloadExcel = async () => {
+  try {
+    let res = await downloadAttendeeExcelApi()
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', '與會者列表.xlsx');
+    document.body.appendChild(link);
+    link.click();
+  } catch (error) {
+    ElMessage.error("下載失敗" + error)
+  }
+}
 
 
 

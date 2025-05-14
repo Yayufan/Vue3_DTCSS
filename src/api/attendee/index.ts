@@ -38,3 +38,11 @@ export function assignTagToAttendeeApi(data: any): AxiosPromise {
     data,
   });
 }
+
+export function downloadAttendeeExcelApi(): AxiosPromise {
+  return request({
+    url: "/attendees/download-excel",
+    method: "get",
+    responseType: "arraybuffer",
+  });
+}

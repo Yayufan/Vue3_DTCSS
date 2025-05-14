@@ -131,6 +131,18 @@ export const constantRoutes: RouteRecordRaw[] = [
           keepAlive: true,
         },
       },
+      {
+        path: "attendeesHostory",
+        component: () => import("@/views/member/attendeesHistory.vue"),
+        name: "attendeesHostory",
+        meta: {
+          title: "往年與會者管理",
+          icon: "el-icon-Finished",
+          hidden: false,
+          roles: ["ADMIN"],
+          keepAlive: true,
+        },
+      },
     ],
   },
 

@@ -18,8 +18,8 @@
       </el-input>
 
       <el-button @click="checkin">test btn</el-button>
-      <el-button>
-        <el-icon @click="scanBarcode">
+      <el-button @click="scanBarcode">
+        <el-icon>
           <ElIconCamera />
         </el-icon>
       </el-button>
@@ -30,6 +30,7 @@
         <el-card v-if="showLastMemberInfo" class="last-member-info">
           <div class="last-member-info-title">會員資訊</div>
           <div class="last-member-info-content">
+            <p>會員編號: {{ member.attendeesVO.sequenceNo }}</p>
             <p>姓名: {{ member.attendeesVO.member.chineseName }}</p>
             <p>會員類別: {{ member.attendeesVO.member.category }}</p>
             <p>是否為去年年會參加會員: {{ member.attendeesVO.isLastYearAttendee }}</p>
@@ -47,7 +48,7 @@ import { s } from 'vite/dist/node/types.d-aGj9QkWt';
 
 /**-------------------------------------------------- */
 const submitData = reactive<any>({
-  attendeesId: null,
+  attendeesId: '1922097049271316482',
   location: '',
   actionType: null,
 })
@@ -81,26 +82,24 @@ const checkin = async () => {
     }
 
     console.log(res.data.attendeesVO.isLastYearAttendee);
-    if (res.data.attendeesVO.isLastYearAttendee && submitData.actionType == 1) {
-
+    if (submitData.actionType == 2) return;
+    if (res.data.attendeesVO.isLastYearAttendee) {
       ElNotification({
-        title: `會員: ${res.data.attendeesVO.member.chineseName}`,
+        title: `會員編號:${res.data.attendeesVO.sequenceNo}`,
         dangerouslyUseHTMLString: true,
-        message: `會員類別: ${category}<br/> <p style="color:green;">為去年年會參加會員</p>`,
+        message: `會員: ${res.data.attendeesVO.member.chineseName}<br/>會員類別: ${category}<br/> <p style="color:green;">為去年年會參加會員</p>`,
         duration: 10000,
         type: 'success',
       })
-    } else if (!res.data.attendeesVO.isLastYearAttendee) {
+    } else {
       ElNotification({
-        title: `會員: ${res.data.attendeesVO.member.chineseName}`,
+        title: `會員編號:${res.data.attendeesVO.sequenceNo}`,
         dangerouslyUseHTMLString: true,
-        message: `會員類別: ${category}<br/><p style="color:red;"> 非去年年會參加會員</p>`,
+        message: `會員: ${res.data.attendeesVO.member.chineseName}<br/>會員類別: ${category}<br/><p style="color:red;"> 非去年年會參加會員</p>`,
         duration: 10000,
         type: 'success',
       })
-
     }
-    console.log('res', res);
   } catch (error) {
     console.log(error);
   }
@@ -190,16 +189,13 @@ const handleStop = () => {
 }
 
 .component-barcode-reader {
-  width: 100%;
+  // width: 100vw;
   // height: 100vh;
 
-  :deep(#qr-shaded-region) {
-    top: 0;
-  }
+  // :deep(#qr-shaded-region) {
+  //   top: 0;
+  // }
 
-  // margin: 0 auto;
-  // display: flex;
-  // justify-content: center;
-  // align-items: center;
+
 }
 </style>

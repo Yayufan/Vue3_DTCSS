@@ -7,6 +7,7 @@ export const useHtml5Code = (domId: string) => {
     const brConfig = {
       fps: 10,
       qrbox: { width: 300, height: 300 },
+      // aspetRadio: 1.7777778,
     };
 
     ElMessage.success("掃描");
