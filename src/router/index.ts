@@ -124,7 +124,19 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import("@/views/member/review.vue"),
         name: "memberReview",
         meta: {
-          title: "繳費審核",
+          title: "與會者管理",
+          icon: "el-icon-Finished",
+          hidden: false,
+          roles: ["ADMIN"],
+          keepAlive: true,
+        },
+      },
+      {
+        path: "attendeesHostory",
+        component: () => import("@/views/member/attendeesHistory.vue"),
+        name: "attendeesHostory",
+        meta: {
+          title: "往年與會者管理",
           icon: "el-icon-Finished",
           hidden: false,
           roles: ["ADMIN"],
@@ -296,9 +308,6 @@ export const constantRoutes: RouteRecordRaw[] = [
           keepAlive: true,
         },
       },
-
-
-
     ],
   },
 
@@ -335,6 +344,33 @@ export const constantRoutes: RouteRecordRaw[] = [
         name: "FileCenterJournal",
         meta: {
           title: "器捐會刊",
+          icon: "menu",
+          hidden: false,
+          roles: ["ADMIN"],
+          keepAlive: true,
+        },
+      },
+    ],
+  },
+  {
+    path: "/check",
+    component: Layout,
+    redirect: "/check/index",
+    name: "check",
+    meta: {
+      title: "簽到系統",
+      icon: "el-icon-EditPen",
+      hidden: false,
+      roles: ["ADMIN"],
+    },
+    children: [
+      /**歷年成果(簽卡分析) 路由 */
+      {
+        path: "check",
+        component: () => import("@/views/attendee-check/index.vue"),
+        name: "scannerCheck",
+        meta: {
+          title: "掃描簽到",
           icon: "menu",
           hidden: false,
           roles: ["ADMIN"],

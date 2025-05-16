@@ -5,30 +5,62 @@
 
 
   <div class="mail-template-box">
-
+    <h1>信件寄送</h1>
+    <div class="mail-count">
+      <span>剩餘 email 數量: {{ emailTemplate.count }}</span>
+    </div>
     <div class="function-bar">
       <el-button type="info" @click="back">返回</el-button>
       <el-button type="primary" @click="sendMail(sendMailFormRef)" :disabled="isDisabled"
         v-loading.fullscreen.lock="fullscreenLoading">寄送</el-button>
     </div>
 
-    <el-form class="subject-form" ref="sendMailFormRef" :rules="sendMailRules" :model="sendMailFormData"
-      label-width="80px" label-position="top">
+    <el-form class="subject-form" ref="sendMailFormRef" :rules="sendMailRules" :model="sendEmailDto" label-width="80px"
+      label-position="top">
       <el-form-item label="主旨" prop="subject">
-        <el-input v-model="sendMailFormData.subject" />
+        <el-input v-model="sendEmailDto.subject" />
       </el-form-item>
+      <el-form-item prop="testEmail">
+        <el-checkbox v-model="sendEmailDto.isTest" label="是否為測試信件" />
+        <el-input v-if="sendEmailDto.isTest" v-model="sendEmailDto.testEmail" placeholder="請輸入測試信箱" />
+      </el-form-item>
+
+
+      <el-button type="primary" @click="openDialog">選擇標籤</el-button>
     </el-form>
+    <el-tag color="black">本次發送對象 :</el-tag>
+    <el-tag v-for="item in selectTags" :color="item.color">{{ item.name }}</el-tag>
 
     <EmailEditor :tools="tools" locale='zh-TW' class="vue-email-editor" ref="emailEditor"
       v-on:load="getDataAndEditorLoaded" :options="emailOptions" />
+
+    <el-dialog v-model="isOpen" title="選擇標籤" width="50%">
+      <el-transfer v-if="optionList" class="transfer" v-model="selectTags" :data="optionList" :titles="['可選標籤', '已選標籤']"
+        :filterable="true">
+        <template #default="{ option }">
+          <el-tag :color="option.color" round>{{ option.label }}</el-tag>
+        </template>
+        <template #left-footer>
+          <div class="pagination-box">
+            <el-pagination layout="prev, pager, next" :total="Number(tagList.length)" @current-change="" />
+          </div>
+        </template>
+      </el-transfer>
+      <template #footer>
+        <el-button type="primary" @click="closeDialog">確定</el-button>
+        <el-button @click="isOpen = false">取消</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang='ts'>
 import { EmailEditor, } from 'vue-email-editor'
-import { getEmailTemplateApi, sendEmailApi, updateEmailTemplateApi } from '@/api/emailTemplate'
+import { getEmailTemplateApi, sendEmailApi, sendEmailByCategoryAndTagApi, updateEmailTemplateApi } from '@/api/emailTemplate'
 import { ref, reactive } from 'vue'
 import { FormInstance, FormRules } from 'element-plus'
+import { getAllTagsApi, getTagsByPaginationApi } from '@/api/tag'
+import { stubObject } from 'lodash'
 
 const router = useRouter()
 
@@ -56,6 +88,9 @@ const sendMailRules = reactive<FormRules>({
 
 let emailTemplate = reactive<Record<string, any>>({})
 let isDisabled = ref(true)
+
+let tagType = ref('')
+let sendUrl = ref('')
 
 let { id } = defineProps(['id'])
 
@@ -99,22 +134,31 @@ const getDataAndEditorLoaded = async () => {
   //   // Handle file upload here
   // })
 
+  let mergeTags = {}
+  switch (emailTemplate.category) {
+    case 'attendees':
+      tagType.value = 'attendees'
+      sendUrl.value = '/attendees/send-email'
+
+      mergeTags = {
+        name: {
+          name: '姓名',
+          value: '{{name}}',
+        },
+        QRcode: {
+          name: 'QRcode',
+          value: '{{QRcode}}',
+        },
+      }
+
+
+  }
   //當編輯器載入完成,解鎖save按鈕
   emailEditor.value.editor.addEventListener('editor:ready', function () {
+    console.log("合併標籤", mergeTags)
     console.log('editor:ready')
 
-
-    emailEditor.value.editor.setMergeTags({
-
-      member_name: {
-        name: 'Member Name',
-        value: '{{memberName}}',
-      },
-      member_code: {
-        name: 'Member Code',
-        value: '{{memberCode}}',
-      },
-    });
+    emailEditor.value.editor.setMergeTags(mergeTags);
     isDisabled.value = false;
   });
 
@@ -174,6 +218,15 @@ const exportPlainText = () => {
 
 /**-------------------信件寄送--------------- */
 
+const sendEmailDto = reactive<any>({
+  "subject": "",
+  "htmlContent": "",
+  "plainText": "",
+  "isTest": false,
+  "testEmail": "",
+  "includeOfficialAttachment": false
+})
+
 
 
 const fullscreenLoading = ref(false)
@@ -222,8 +275,11 @@ const getImageSizeFromDesign = (design: any) => {
         if (content.type === 'image') {
 
           // 計算寬度資訊 
-          let widthPercent = Number(content.values.src.maxWidth.replace('%', '')) / 100;
-          let maxWidth = Math.round(content.values.src.width * widthPercent);
+          let maxWidth = content.values.src.width > 600 ? 600 : content.values.src.width;
+          if (content.values.src.maxWidth) {
+            let widthPercent = Number(content.values.src.maxWidth.replace('%', '')) / 100;
+            maxWidth = Math.round(content.values.src.width * widthPercent);
+          }
           imageInfoList.push({
             position: content.values.textAlign,
             maxWidthString: maxWidth.toString()
@@ -235,6 +291,7 @@ const getImageSizeFromDesign = (design: any) => {
   return images;
 };
 
+const returnData = reactive<any>({})
 const sendMail = async (sendMailFormRef: FormInstance | undefined) => {
   let jsonDesign;
   let htmlContent;
@@ -299,17 +356,26 @@ const sendMail = async (sendMailFormRef: FormInstance | undefined) => {
   if (jsonDesign) {
     console.log(getImageSizeFromDesign(JSON.parse(jsonDesign)))
   }
-  sendMailFormData.htmlContent = optimizeForOutlook(htmlContent);
-  sendMailFormData.plainText = plainText
-  console.log("emailTemplate資料: ", sendMailFormData)
+  // sendMailFormData.htmlContent = optimizeForOutlook(htmlContent);
+  // sendMailFormData.plainText = plainText
+  // sendMailFormData.tagList = selectTags.value
+  sendEmailDto.htmlContent = optimizeForOutlook(htmlContent);
+  sendEmailDto.plainText = plainText
+  returnData.tagIdList = selectTags.value.map((item: any) => {
+    return item.tagId
+  })
+  // console.log("emailTemplate資料: ", sendMailFormData)
+  console.log("emailTemplate資料: ", sendEmailDto)
 
   if (!sendMailFormRef) return;
+  returnData.sendEmailDTO = sendEmailDto
+  console.log("returnData", returnData)
 
   sendMailFormRef.validate(async (valid) => {
     if (valid) {
       try {
         //呼叫父組件給的新增function API
-        await sendEmailApi(sendMailFormData);
+        await sendEmailByCategoryAndTagApi(returnData, sendUrl.value);
         await loading()
         ElMessage.success('寄送成功');
         router.back()
@@ -322,6 +388,52 @@ const sendMail = async (sendMailFormRef: FormInstance | undefined) => {
   })
 }
 
+/**======================================================= */
+const tagList = reactive<any>([])
+const optionList = reactive<any>([])
+
+const selectTags = ref<any>([])
+
+const tagCurrentPage = ref<number>(1)
+
+const getTagList = async () => {
+  console.log(tagType.value)
+
+  let res = await getTagsByPaginationApi(tagCurrentPage.value, 10, tagType.value)
+  console.log("獲取標籤列表", res.data)
+  tagList.length = 0
+  optionList.length = 0
+  Object.assign(tagList, res.data.records)
+  tagList.forEach((item: any) => {
+    optionList.push({
+      key: item,
+      label: item.name,
+      color: item.color,
+    })
+  })
+}
+
+watch(tagType, (newVal) => {
+  console.log("tagType", newVal)
+  getTagList()
+})
+
+
+const isOpen = ref(false)
+const openDialog = () => {
+
+  isOpen.value = true
+}
+
+const closeDialog = () => {
+  isOpen.value = false
+  console.log(selectTags.value)
+}
+
+
+onMounted(() => {
+  getTagList()
+})
 
 
 
@@ -343,5 +455,16 @@ const sendMail = async (sendMailFormRef: FormInstance | undefined) => {
     margin: 3% auto;
   }
 
+}
+
+:deep(.el-tag__content) {
+  color: white !important;
+  font-size: 14px;
+}
+
+.transfer {
+  display: flex !important;
+
+  justify-content: center !important;
 }
 </style>

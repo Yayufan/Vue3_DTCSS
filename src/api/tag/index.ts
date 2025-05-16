@@ -10,7 +10,8 @@ export function getAllTagsApi(): AxiosPromise {
 
 export function getTagsByPaginationApi(
   page: number,
-  size: number
+  size: number,
+  tagType?: string
 ): AxiosPromise {
   return request({
     url: "/tag/pagination",
@@ -18,6 +19,7 @@ export function getTagsByPaginationApi(
     params: {
       page,
       size,
+      tagType,
     },
   });
 }
@@ -50,5 +52,22 @@ export function assignMemberToTagApi(data: any): AxiosPromise {
     url: "/tag/member",
     method: "put",
     data: data,
+  });
+}
+
+export function assignPaperToTagApi(data: any) {
+  console.log("assignPaperToTagApi", data);
+  return request({
+    url: "/tag/paper",
+    method: "put",
+    data,
+  });
+}
+
+export function assignPaperReviewerToTagApi(data: any) {
+  return request({
+    url: "/tag/paper-reviewer",
+    method: "put",
+    data,
   });
 }
