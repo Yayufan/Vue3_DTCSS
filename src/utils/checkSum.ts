@@ -82,6 +82,7 @@ export const formRulesTW = reactive<FormRules>({
   country: [{ required: true, message: "請輸入國家", trigger: "blur" }],
   phone: [{ required: true, message: "請輸入電話號碼", trigger: "blur" }],
   idCard: [{ required: true, validator: checkIdCard, trigger: "blur" }],
+  // category: [{ required: true, message: "請選擇類別", trigger: "blur" }],
 });
 
 /**-----------------------------------英文校驗------------------------------ */

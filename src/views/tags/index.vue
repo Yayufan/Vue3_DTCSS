@@ -513,7 +513,7 @@ let attendeeIdSet = new Set(); // 儲存不重複的ID值
 
 const getAttendeeByPagination = async () => {
   try {
-    let res = await getAttendeeListByTagAndPaginationApi(assignTagCurrentPage.value, input.value)
+    let res = await getAttendeeListByTagAndPaginationApi(assignTagCurrentPage.value, 10, input.value)
     attendeeIdSet.clear() // 清空 set 內的資料
     attendeeList.length = 0 // 清空 attendeeList 內的資料
     Object.assign(attendeeList, res.data)

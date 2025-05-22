@@ -6,8 +6,8 @@ export const useHtml5Code = (domId: string) => {
   const start = (qrCodeSuccessCallback: () => void) => {
     const brConfig = {
       fps: 10,
-      qrbox: { width: 300, height: 300 },
-      // aspetRadio: 1.7777778,
+      qrbox: { width: innerWidth * 0.6, height: innerWidth * 0.6 },
+      // aspetRadio: 1.0,
     };
 
     ElMessage.success("掃描");
@@ -33,16 +33,20 @@ export const useHtml5Code = (domId: string) => {
         })
         .catch((err) => {
           console.error("Error stopping QR code scanner: ", err);
-          ElMessage.error("Error stopping QR code scanner: " + err);
+          // ElMessage({
+          //   type: "error",
+          //   dangerouslyUseHTMLString: true,
+          //   message: `<B>${err}</B>`,
+          // });
         });
     } catch (error) {
       console.error("Error clearing QR code scanner: ", error);
-      ElMessage.error("Error clearing QR code scanner: " + error);
+      // ElMessage.error("Error clearing QR code scanner: " + error);
     }
   };
 
   const qrCodeErrorCallBack = (errorMessage: string) => {
-    console.error("QR Code Error: ", errorMessage);
+    // console.error("QR Code Error: ", errorMessage);
     // ElMessage.error("QR Code Error: " + errorMessage);
   };
   return {

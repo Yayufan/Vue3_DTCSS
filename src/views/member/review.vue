@@ -164,7 +164,7 @@ let updateMemberRegistrationFeeOrder = reactive<Record<string, any>>({
 const attendeeList = reactive<any>([])
 
 const getAttendeeList = async () => {
-  let res = await getAttendeeListByTagAndPaginationApi(currentPage.value, input.value)
+  let res = await getAttendeeListByTagAndPaginationApi(currentPage.value, 10, input.value)
   console.log("這是與會者列表: ", res)
 
   Object.assign(attendeeList, res.data)

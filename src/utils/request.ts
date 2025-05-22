@@ -38,7 +38,13 @@ service.interceptors.response.use(
     if (code == '401') {
       localStorage.removeItem("Authorization")
     }
-    ElMessage.error(msg || "系统出错");
+    ElMessage(
+      {
+        type: "error",
+        dangerouslyUseHTMLString: true,
+        message: `<B><p style='font-size:1.2rem'>${msg || "系统出错"}</p></B>`,
+      }
+    );    
     return Promise.reject(new Error(msg || "Error"));
 
   },
@@ -58,7 +64,13 @@ service.interceptors.response.use(
           });
         });
       } else {
-        ElMessage.error(msg || "系统出错");
+        ElMessage(
+          {
+            type: "error",
+            dangerouslyUseHTMLString: true,
+            message: `<B><p style='font-size:1.2rem'>${msg || "系统出错"}</p></B>`,
+          }
+        );
       }
     }
     return Promise.reject(error.message);
