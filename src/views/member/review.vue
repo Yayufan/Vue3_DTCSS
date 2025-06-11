@@ -20,6 +20,9 @@
           <el-button type="success" @click="downloadExcel">
             下載Excel
           </el-button>
+          <el-button type="success" @click="downloadCheckinRecordExcel">
+            下載簽到記錄Excel
+          </el-button>
         </div>
       </div>
 
@@ -110,6 +113,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 
 import { updateOrdersApi } from '@/api/order'
 import { batchDeleteAttendeesApi, deleteAttendeeApi, downloadAttendeeExcelApi, getAttendeeListByTagAndPaginationApi } from '@/api/attendee'
+import { downloadCheckinRecordExcelApi } from '@/api/checkin'
 
 
 //獲取路由
@@ -232,6 +236,20 @@ const downloadExcel = async () => {
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', '與會者列表.xlsx');
+    document.body.appendChild(link);
+    link.click();
+  } catch (error) {
+    ElMessage.error("下載失敗" + error)
+  }
+}
+
+const downloadCheckinRecordExcel = async () => {
+  try {
+    let res = await downloadCheckinRecordExcelApi()
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', '與會者簽到記錄.xlsx');
     document.body.appendChild(link);
     link.click();
   } catch (error) {

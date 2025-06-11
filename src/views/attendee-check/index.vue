@@ -48,23 +48,27 @@
             <el-button class="site-on" link type="primary" @click="openDialog">+現場登記</el-button>
           </div>
           <p class="primary">{{ total }} 位參加者</p>
-          <el-scrollbar ref="scrollRef" max-height="60%" @scroll.native="handleScroll">
-            <el-card v-for="item in showAttendeesList" class="checkin-data-card">
-              <div class="member-info" @click="openDrawer(item)">
-                <p class="attendee-name">{{ item.member.chineseName }}</p>
-                <p>{{ memberEnums[item.member.category] }}</p>
-              </div>
-              <el-icon class="checkin-icon" :class="item.isCheckedIn ? 'checkin' : ''"
-                @click="handleClickCheckIcon(item)">
-                <CircleCheck />
+          <div class="scroll-box">
+            <el-scrollbar ref="scrollRef" @scroll.native="handleScroll">
+              <el-card v-for="item in showAttendeesList" class="checkin-data-card">
+                <div class="member-info" @click="openDrawer(item)">
+                  <p class="attendee-name">{{ item.member.chineseName }}</p>
+                  <p>{{ memberEnums[item.member.category] }}</p>
+                </div>
+                <el-icon class="checkin-icon" :class="item.isCheckedIn ? 'checkin' : ''"
+                  @click="handleClickCheckIcon(item)">
+                  <CircleCheck />
+                </el-icon>
+              </el-card>
+            </el-scrollbar>
+          </div>
+          <div class="scan-btn-box">
+            <el-button class="scan-btn" @click="scanBarcode" circle>
+              <el-icon>
+                <ElIconCamera />
               </el-icon>
-            </el-card>
-          </el-scrollbar>
-          <el-button class="scan-btn" @click="scanBarcode" circle>
-            <el-icon>
-              <ElIconCamera />
-            </el-icon>
-          </el-button>
+            </el-button>
+          </div>
         </div>
       </div>
 
@@ -696,7 +700,7 @@ watch(
   display: flex;
   justify-content: center;
   gap: 1rem;
-  max-height: 80vh;
+  // max-height: 80vh;
 
   @media screen and (max-width: 425px) {
     flex-direction: column;
@@ -725,7 +729,7 @@ watch(
   margin-top: 1rem;
   padding: 1rem;
   border: 1px solid #e4e7ed;
-  max-height: 60%;
+  // max-height: 60%;
   width: 35%;
   position: relative;
 
@@ -739,6 +743,15 @@ watch(
 
   @media screen and (max-width: 425px) {
     width: 90%;
+  }
+
+  .scroll-box {
+    height: 60vh;
+  }
+
+  .scan-btn-box {
+    display: flex;
+    justify-content: center;
   }
 
   .checkin-data-card {
@@ -769,9 +782,9 @@ watch(
     width: 5rem;
     height: 5rem;
     aspect-ratio: 1/1;
-    position: absolute;
-    bottom: 1rem;
-    right: 43%;
+    // position: absolute;
+    // bottom: 1rem;
+    // right: 43%;
     background-color: #409eff;
     color: white;
   }

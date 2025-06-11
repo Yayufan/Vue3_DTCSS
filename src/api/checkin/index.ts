@@ -34,3 +34,11 @@ export function deleteLastCheckinRecordApi(data: any): AxiosPromise {
     },
   });
 }
+
+export function downloadCheckinRecordExcelApi(): AxiosPromise {
+  return request({
+    url: `/checkin-record/download-excel`,
+    method: "get",
+    responseType: "arraybuffer",
+  });
+}
