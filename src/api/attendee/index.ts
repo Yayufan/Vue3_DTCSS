@@ -3,6 +3,7 @@ import { AxiosPromise } from "axios";
 
 export function getAttendeeListByTagAndPaginationApi(
   page: number,
+  size: number,
   queryText: string
 ): AxiosPromise {
   return request({
@@ -10,7 +11,7 @@ export function getAttendeeListByTagAndPaginationApi(
     method: "get",
     params: {
       page: page,
-      size: 10,
+      size: size,
       queryText: queryText,
     },
   });
@@ -44,5 +45,13 @@ export function downloadAttendeeExcelApi(): AxiosPromise {
     url: "/attendees/download-excel",
     method: "get",
     responseType: "arraybuffer",
+  });
+}
+
+export function insertAttendeeOnSiteApi(data: any): AxiosPromise {
+  return request({
+    url: "/attendees/on-site",
+    method: "post",
+    data,
   });
 }

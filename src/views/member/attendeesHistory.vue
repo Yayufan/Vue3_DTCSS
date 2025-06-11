@@ -12,8 +12,11 @@
         </el-button>
       </div>
 
-      <el-table>
-        <el-table-column></el-table-column>
+      <el-table :data="attendeesHistoryList.records" style="width: 100%">
+        <el-table-column prop="name" label="姓名" width="180"></el-table-column>
+        <el-table-column prop="year" label="與會年分" width="180"></el-table-column>
+        <el-table-column prop="idCard" label="身分證字號" width="180"></el-table-column>
+        <el-table-column prop="email" label="E-mail"></el-table-column>
       </el-table>
 
 
@@ -22,8 +25,8 @@
     <el-dialog class="template-tips" title="下載Excel模板" v-model="downloadDialogIsVisible" width="60%">
       <div class="template-tips-content">
         <ul class="step-list" style="list-style-type: decimal;">
-          <li>下載 Excel模板(觸發模板下載API) ，透過模板填入資料將往年與會者填入系統</li>
-          <li>欄位說明(無序排列)：
+          <li>下載 Excel模板，透過模板填入資料將往年與會者填入系統</li>
+          <li>欄位說明：
             <ul class="sub-list">
               <li>year 為與會年分，統一填2024即可</li>
               <li>id_card 為身分證字號 或 護照號碼</li>
@@ -48,10 +51,12 @@
 
     <el-dialog class="upload-excel" title="上傳Excel資料" v-model="uploadDialogIsVisible" width="60%">
       <div class="upload-excel-content">
-        <el-upload ref="uploadRef" class="upload-demo" :limit="1" :on-change="handleUpload" :auto-upload="false"
+        <el-upload ref="uploadRef" drag class="upload-demo" :limit="1" :on-change="handleUpload" :auto-upload="false"
           :on-remove="handleRemove">
-          <el-button size="small" type="primary">Upload</el-button>
-          <div slot="tip" class="el-upload__tip">only upload pdf file with size less than 20mb</div>
+          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+          <div class="el-upload__text">
+            Drop file here or <em>click to upload</em>
+          </div>
         </el-upload>
       </div>
       <span slot="footer" class="dialog-footer">
@@ -65,8 +70,8 @@
   </section>
 </template>
 <script lang="ts" setup>
-import { getAttendeesHistoryExcelTemplateApi, importAttendeesHistoryExcelApi } from '@/api/attendeesHistory';
-import type { UploadFile, UploadProps, UploadUserFile, } from 'element-plus';
+import { getAttendeesHistoryByPaginationApi, getAttendeesHistoryExcelTemplateApi, importAttendeesHistoryExcelApi } from '@/api/attendeesHistory';
+import type { UploadFile, UploadInstance, UploadProps, UploadUserFile, } from 'element-plus';
 
 const downloadDialogIsVisible = ref(false);
 const toggleDialog = () => {
@@ -89,15 +94,24 @@ const downloadExcelTemplate = async () => {
   }
 }
 
+const uploadRef = ref<UploadInstance>();
 /**----------------------------------------------------- */
 const uploadExcel = async () => {
-  let data = new FormData();
-  uploadData.fileList.forEach((file: any) => {
-    data.append('file', file.raw);
-  });
-
-
-  let res = await importAttendeesHistoryExcelApi(data);
+  try {
+    let data = new FormData();
+    uploadData.fileList.forEach((file: any) => {
+      data.append('file', file.raw);
+    });
+    let res = await importAttendeesHistoryExcelApi(data);
+    ElMessage.success("上傳成功");
+    findAllAttendeesHistoryApi();
+    uploadDialogIsVisible.value = false;
+    uploadData.fileList = [];
+    uploadRef.value?.clearFiles();
+  } catch (error) {
+    console.log(error);
+    ElMessage.error("上傳失敗" + error)
+  }
 }
 
 const uploadData = reactive({
@@ -124,9 +138,6 @@ const handleUpload: UploadProps['onChange'] = (file: UploadUserFile, uploadFiles
       return;
     }
     uploadData.fileList.push(file);
-    // if (formRef.value) {
-    //     formRef.value.validateField('fileList');
-    // }
   }
 
 }
@@ -137,6 +148,23 @@ const handleRemove = (file: UploadUserFile, fileList: UploadUserFile[]) => {
   //     formRef.value.validateField('fileList');
   // }
 }
+
+const attendeesHistoryList = reactive<any>([]);
+const currentPage = ref(1);
+const findAllAttendeesHistoryApi = async () => {
+  try {
+    let res = await getAttendeesHistoryByPaginationApi(currentPage.value, 10);
+    console.log(res);
+    Object.assign(attendeesHistoryList, res.data);
+  } catch (error) {
+    console.log(error);
+    Object.assign(attendeesHistoryList.records, []);
+  }
+}
+
+onMounted(() => {
+  findAllAttendeesHistoryApi();
+});
 
 
 

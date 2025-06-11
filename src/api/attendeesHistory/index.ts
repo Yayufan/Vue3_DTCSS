@@ -1,5 +1,5 @@
 import request from "@/utils/request";
-import { AxiosPromise } from "axios";
+import { Axios, AxiosPromise } from "axios";
 
 export function getAttendeesHistoryExcelTemplateApi(): AxiosPromise {
   return request({
@@ -14,5 +14,16 @@ export function importAttendeesHistoryExcelApi(data: FormData): AxiosPromise {
     url: "/attendees-history/import",
     method: "post",
     data,
+  });
+}
+
+export function getAttendeesHistoryByPaginationApi(page: number, size: number): AxiosPromise {
+  return request({
+    url: "/attendees-history/pagination",
+    method: "get",
+    params: {
+      page: page,
+      size: size,
+    },
   });
 }

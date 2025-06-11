@@ -10,12 +10,12 @@
 
         <div class="btn-box">
 
-          <el-button type="danger" @click="deleteList" :disabled="deleteSelectList.length > 0 ? false : true">
+          <!-- <el-button type="danger" @click="deleteList" :disabled="deleteSelectList.length > 0 ? false : true">
             刪除
             <el-icon class="el-icon--right">
               <Delete />
             </el-icon>
-          </el-button>
+          </el-button> -->
 
           <el-button type="primary" @click="toggleInsertDialog">
             新增
@@ -54,7 +54,7 @@
         <el-table-column fixed="right" label="操作" width="150">
           <!-- 透過#default="scope" , 獲取到當前的對象值 , scope.row則是拿到當前那個row的數據  -->
           <template #default="scope">
-            <el-button link type="success" size="small" @click="toggleMemberDialog(scope.row)">
+            <el-button link type="success" size="small" @click="toggleAssignTagDialog(scope.row)">
               Add
             </el-button>
             <el-button link type="primary" size="small" @click="editRow(scope.row)">
@@ -214,7 +214,7 @@
   </section>
 </template>
 <script lang="ts" setup>
-import { addTagApi, assignMemberToTagApi, deleteTagApi, getAllTagsApi, getTagsByPaginationApi, updateTagApi } from '@/api/tag'
+import { addTagApi, assignMemberToTagApi, deleteTagApi, findAttendeesIdListByTagIdApi, findMemberIdListByTagIdApi, getAllTagsApi, getTagsByPaginationApi, updateTagApi } from '@/api/tag'
 import { getMemberByPaginationApi, getMemberByPaginationByStatusApi } from '@/api/member'
 import type { FormInstance, FormRules } from 'element-plus'
 import { typeEnums } from '@/enums/TypeEnum'
@@ -384,7 +384,6 @@ const deleteList = () => {
 }
 
 /**-------------------查詢會員-------------------- */
-const assignTagDialogVisible = ref(false)
 
 const assignTagTitle = ref('')
 
@@ -413,52 +412,25 @@ const resetQueryText = (): void => {
   input.value = ''
 }
 
-// 要設置的 Tag
-let assignTag = reactive({
-  tagId: '',
-  type: '',
-  name: '',
-  description: '',
-  color: '',
-})
-
-watch(assignTag, (value) => {
-  console.log("這是要設置的 Tag: ", value)
-  switch (value.type) {
-    case 'member':
-      assignTagTitle.value = '新增會員'
-      break
-    case 'attendees':
-      assignTagTitle.value = '新增與會者'
-      break
-  }
-})
-
 
 watch(assignTagCurrentPage, (value, oldValue) => {
   getData(assignTag.type, value)
 })
 
-const getData = (option: string, page: number) => {
+
+const allMemberIdHasSet = new Set(); // 儲存所有已經有的 member ID
+const getData = async (option: string, page: number) => {
   switch (option) {
     case 'member':
-      console.log("獲取會員")
       getMemberListByPagination(page, 10)
       break
     case 'attendees':
-      console.log("獲取與會者")
       getAttendeeByPagination()
       break
   }
 }
 
 
-/** 開啟新增會員 Dialog */
-const toggleMemberDialog = (tag: any) => {
-  assignTagDialogVisible.value = true
-  Object.assign(assignTag, tag) // 獲取要新增的標籤
-  getData(tag.type, assignTagCurrentPage.value)
-}
 
 
 const getRowKey = (row: any) => {
@@ -468,10 +440,6 @@ const getRowKey = (row: any) => {
     case 'attendees':
       return row.attendeesId
   }
-
-
-
-  // return row.memberId
 }
 
 // 1. 獲取該分頁所有 member 
@@ -498,10 +466,8 @@ const getMemberListByPagination = async (page: number, size: number) => {
 
   /** 判斷獲得的回傳資料是否已擁有該 tag 或是目前已經新增至已勾選的 set 內 */
   res.data.records.forEach((record: any) => {
-    if ((record.tagSet && record.tagSet.some((tag: any) => tag.tagId === assignTag.tagId)) || submitMemeberSet.has(record.memberId)) {
+    if (allMemberIdHasSet.has(record.memberId)) {
       memberTableRef.value.toggleRowSelection(record, true);
-      /** 新增預設勾選資料進 set 內 */
-      submitMemeberSet.add(record.memberId)
     }
   })
 }
@@ -513,24 +479,19 @@ let attendeeIdSet = new Set(); // 儲存不重複的ID值
 
 const getAttendeeByPagination = async () => {
   try {
-    let res = await getAttendeeListByTagAndPaginationApi(assignTagCurrentPage.value, input.value)
-    attendeeIdSet.clear() // 清空 set 內的資料
+    let res = await getAttendeeListByTagAndPaginationApi(assignTagCurrentPage.value, 10, input.value)
     attendeeList.length = 0 // 清空 attendeeList 內的資料
     Object.assign(attendeeList, res.data)
-    console.log("這是與會者列表: ", attendeeList)
+    totalPage.value = res.data.pages
 
     /** 確認獲取到 table */
     if (!attendeeTableRef.value) return;
     attendeeTableRef.value.clearSelection(); // 清空選擇的資料
     res.data.records.forEach((record: any) => {
-      if ((record.tagSet && record.tagSet.some((tag: any) => tag.tagId === assignTag.tagId)) || attendeeIdSet.has(record.attendeesId)) {
+      if (attendeeIdSet.has(record.attendeesId)) {
         attendeeTableRef.value.toggleRowSelection(record, true);
-        /** 新增預設勾選資料進 set 內 */
-        attendeeIdSet.add(record.attendeesId)
       }
     })
-
-
   } catch (err: any) {
     console.log(err)
     ElMessage.error('查詢失敗', err.message)
@@ -556,9 +517,7 @@ const handleAttendeesSelect = (selection: any, row: any) => {
 
 
 
-
-
-
+/**---------------------------------------------------------------------- */
 
 /** 處理勾選
  * @param selection: 全部已勾選資料
@@ -568,30 +527,9 @@ const handleMemberSelect = (selection: any, row: any) => {
 
   /** 判斷已勾選的資料內是否有該 member 有的話新增至 set內， 沒有的話從 set 移除 */
   if (selection.some((item: any) => item.memberId === row.memberId)) {
-    submitMemeberSet.add(row.memberId)
+    allMemberIdHasSet.add(row.memberId) // 確認該 member 已經有這個 tag
   } else {
-    submitMemeberSet.delete(row.memberId)
-  }
-  console.log("memberSet :", submitMemeberSet)
-}
-
-const cliclAddMember = async () => {
-  /** data :
-   *  targetMemberIdList: 所有含有這個 tag 的 member
-   */
-  let data = {
-    tagId: assignTag.tagId,
-    targetMemberIdList: Array.from(submitMemeberSet)
-  }
-  try {
-    await assignMemberToTagApi(data)
-    ElMessage.success('保存成功')
-    assignTagDialogVisible.value = false
-    assignTagCurrentPage.value = 1
-    submitMemeberSet.clear()
-    resetQueryText()
-  } catch (err: any) {
-    console.log(err)
+    allMemberIdHasSet.delete(row.memberId) // 確認該 member 已經沒有這個 tag
   }
 }
 
@@ -599,9 +537,10 @@ const submitTagSet = async () => {
   let data;
   switch (assignTag.type) {
     case 'member':
+      console.log("最後返回 :", allMemberIdHasSet)
       data = {
         tagId: assignTag.tagId,
-        targetMemberIdList: Array.from(submitMemeberSet)
+        targetMemberIdList: Array.from(allMemberIdHasSet)
       }
 
       try {
@@ -642,6 +581,61 @@ const cancelAdd = () => {
   submitMemeberSet.clear()
   resetQueryText();
 }
+
+/**-----------------------Tag---------------------- */
+const assignTagDialogVisible = ref(false) // 是否顯示新增標籤 Dialog
+
+// 要設置的 Tag
+let assignTag = reactive({
+  tagId: '',
+  type: '',
+  name: '',
+  description: '',
+  color: '',
+})
+
+/** 開啟新增會員 Dialog */
+const toggleAssignTagDialog = async (tag: any) => {
+  Object.assign(assignTag, tag)
+  // getListByTagType(tag)
+  changedTag(tag) // 根據 tag 類型獲取資料
+  getData(tag.type, assignTagCurrentPage.value)
+  assignTagDialogVisible.value = true
+}
+
+const changedTag = async (tag: any) => {
+  allMemberIdHasSet.clear() // 清空所有已經有的 member ID
+  attendeeIdSet.clear(); // 清空與會者 ID set
+  assignTagCurrentPage.value = 1 // 重置當前頁數
+  switch (tag.type) {
+    case 'member':
+      assignTagTitle.value = '新增會員'
+      let res = await findMemberIdListByTagIdApi(tag.tagId);
+      res.data.forEach((id: string) => {
+        allMemberIdHasSet.add(id)
+      })
+      break;
+    case 'attendees':
+      assignTagTitle.value = '新增與會者'
+      let attendeeRes = await findAttendeesIdListByTagIdApi(tag.tagId);
+      console.log("attendeeRes :", attendeeRes)
+      attendeeRes.data.forEach((id: string) => {
+        attendeeIdSet.add(id)
+      })
+      break;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 /**-------------------掛載頁面時執行-------------------- */
 
