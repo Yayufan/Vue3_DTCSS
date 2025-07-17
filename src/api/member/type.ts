@@ -16,7 +16,7 @@ export interface memberRecordType {
   receipt: string;
   food: string;
   foodTaboo: string;
-  category: string;
+  category: number;
   categoryExtra: string;
   status: string;
   tagSet: [];
