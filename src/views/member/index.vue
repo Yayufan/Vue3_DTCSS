@@ -153,18 +153,18 @@
               <el-input disabled v-model="updateMemberForm.phone" />
             </el-form-item>
 
-            <el-form-item label="飲食偏好" prop="dietaryPreference">
+            <!-- <el-form-item label="飲食偏好" prop="dietaryPreference">
               <el-radio-group v-model="updateMemberForm.food" placeholder="Select" style="width: 240px;">
                 <el-radio label="葷食" value="葷">
                 </el-radio>
                 <el-radio label="素食" value="素">
                 </el-radio>
               </el-radio-group>
-            </el-form-item>
+            </el-form-item> -->
 
-            <el-form-item label="飲食禁忌" prop="foodTaboo">
+            <!-- <el-form-item label="飲食禁忌" prop="foodTaboo">
               <el-input v-model="updateMemberForm.foodTaboo" placeholder="請輸入飲食禁忌" />
-            </el-form-item>
+            </el-form-item> -->
 
 
           </el-form>
@@ -189,33 +189,48 @@
         <el-form-item class="" label="電子信箱" prop="email" :rules="formRulesTW.email">
           <el-input v-model="insertForm.email" type="email" placeholder="請輸入E-mail" />
         </el-form-item>
-        <el-form-item class="" label="單位" prop="affiliation" :rules="formRulesTW.affiliation">
-          <el-input v-model="insertForm.affiliation" placeholder="單位" />
+        <div class="phone-num-box">
+          <!-- <el-form-item class="" label="電話號碼" prop="countryCode" :rules="formRulesTW.countryCode">
+            <el-input class="country-code-input" v-model="insertForm.countryCode" disabled placeholder="國家代碼" />
+          </el-form-item> -->
+          <el-form-item class="" label="電話號碼" prop="phone" :rules="formRulesTW.phone">
+            <el-input class="phone-input" v-model="insertForm.phone" placeholder="電話號碼"></el-input>
+          </el-form-item>
+        </div>
+        <el-form-item label="國籍" prop="country" :rules="formRulesTW.country">
+          <el-select v-model="insertForm.country" placeholder="國籍">
+            <el-option v-for="country in countries" :key="country" :label="country" :value="country" />
+          </el-select>
+        </el-form-item>
+        <el-form-item class="" label="所屬科部" prop="affiliation" :rules="formRulesTW.affiliation">
+          <el-input v-model="insertForm.affiliation" placeholder="所屬科部" />
         </el-form-item>
         <el-form-item class="" label="職稱" prop="jobTitle" :rules="formRulesTW.jobTitle">
           <el-input v-model="insertForm.jobTitle" placeholder="職稱" />
         </el-form-item>
-        <el-form-item class="" label="身分證" prop="idCard" :rules="formRulesTW.idCard">
+        <el-form-item class="" label="醫院" prop="receipt" :rules="formRulesTW.receipt">
+          <el-input v-model="insertForm.receipt" placeholder="醫院" />
+        </el-form-item>
+        <!-- <el-form-item class="" label="身分證" prop="idCard" :rules="formRulesTW.idCard">
           <el-input v-model="insertForm.idCard" placeholder="身分證" />
+        </el-form-item> -->
+        <el-form-item class="" label="住宿" prop="food" :rules="formRulesTW.food">
+          <el-input v-model="insertForm.food" placeholder="請輸入住宿需求" />
         </el-form-item>
-        <div class="phone-num-box">
-          <el-form-item class="" label="電話號碼" prop="countryCode" :rules="formRulesTW.countryCode">
-            <el-input class="country-code-input" v-model="insertForm.countryCode" disabled placeholder="國家代碼" />
-          </el-form-item>
-          <el-form-item class="" label="" prop="phone" :rules="formRulesTW.phone">
-            <el-input class="phone-input" v-model="insertForm.phone" placeholder="電話號碼"></el-input>
-          </el-form-item>
-        </div>
-        <el-form-item class="" label="飲食偏好" prop="food">
-          <el-radio-group v-model="insertForm.food" placeholder="Select" style="width: 240px;">
-            <el-radio label="葷食" value="葷">
-            </el-radio>
-            <el-radio label="素食" value="素">
-            </el-radio>
+        <el-form-item class="" label="晚宴" prop="foodTaboo" :rules="formRulesTW.foodTaboo">
+          <el-input v-model="insertForm.foodTaboo" placeholder="請輸入晚宴需求" />
+        </el-form-item>
+        <el-form-item class="" label="攜眷" prop="remitAccountLast5" :rules="formRulesTW.remitAccountLast5">
+          <el-input v-model="insertForm.remitAccountLast5" placeholder="是否攜眷" />
+        </el-form-item>
+
+        <el-form-item class="" label="身分" prop="category" :rules="formRulesTW.category">
+          <el-radio-group v-model="insertForm.category">
+            <el-radio label="MVP" value="4">MVP</el-radio>
+            <el-radio label="講者" value="5">講者</el-radio>
+            <el-radio label="座長" value="6">座長</el-radio>
+            <el-radio label="Staff" value="7">Staff</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item class="" label="飲食禁忌" prop="foodTaboo">
-          <el-input type="textarea" v-model="insertForm.foodTaboo" placeholder="請輸入飲食禁忌" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -241,8 +256,12 @@ import { getAllTagsApi } from '@/api/tag'
 import type { memberRecordType } from '@/api/member/type.ts'
 import type { returnType } from '@/api/type'
 
+import countriesJson from '@/assets/data/countries.json'
+
 import { formRulesTW } from '@/utils/checkSum'
 
+
+const countries = ref(countriesJson)
 
 /**================================================== */
 const downloadExcel = async () => {
@@ -519,13 +538,15 @@ const insertForm = reactive({
   email: '',
   affiliation: '',
   jobTitle: '',
+  receipt: '',
   idCard: '',
   countryCode: '886',
   phone: '',
-  food: '葷',
+  food: '',
   foodTaboo: '',
   category: '4',
   country: 'Taiwan',
+  remitAccountLast5: '',
 })
 //是否顯示表單dialog
 const dialogFormVisible = ref(false)

@@ -82,7 +82,15 @@ export const formRulesTW = reactive<FormRules>({
   country: [{ required: true, message: "請輸入國家", trigger: "blur" }],
   phone: [{ required: true, message: "請輸入電話號碼", trigger: "blur" }],
   idCard: [{ required: true, validator: checkIdCard, trigger: "blur" }],
-  // category: [{ required: true, message: "請選擇類別", trigger: "blur" }],
+  receipt: [{ required: true, message: "請輸入醫院", trigger: "blur" }],
+  food: [{ required: true, message: "請輸入住宿需求", trigger: "blur" }],
+  foodTaboo: [{ required: true, message: "請輸入晚宴需求", trigger: "blur" }],
+  remitAccountLast5: [
+    { required: true, message: "請輸入是否攜眷", trigger: "blur" },
+  ],
+  category: [
+    { required: true, message: "請選擇類別", trigger: "blur" },
+  ],
 });
 
 /**-----------------------------------英文校驗------------------------------ */
