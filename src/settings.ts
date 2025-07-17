@@ -7,7 +7,7 @@ const { pkg } = __APP_INFO__;
 
 const defaultSettings: AppSettings = {
   // title: pkg.name,
-  title: "大林慈濟 後台",
+  title: "心臟外科研討會 後台",
   version: pkg.version,
   showSettings: true,
   tagsView: false,
