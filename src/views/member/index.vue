@@ -132,15 +132,29 @@
               <el-input v-model="updateMemberForm.chineseName" placeholder="請輸入密碼" />
             </el-form-item>
 
-            <el-form-item label="身分證" prop="idCard" :rules="formRulesTW.idCard">
-              <el-input v-model="updateMemberForm.idCard" />
-            </el-form-item>
-
-            <el-form-item label="E-Mail" prop="email" :rules="formRulesTW.email">
+            <el-form-item label="電子信箱" prop="email" :rules="formRulesTW.email">
               <el-input disabled v-model="updateMemberForm.email" />
             </el-form-item>
 
-            <el-form-item label="單位" prop="affiliation" :rules="formRulesTW.affiliation">
+            <el-form-item label="連絡電話" prop="phone" :rules="formRulesTW.phone">
+              <el-input disabled v-model="updateMemberForm.phone" />
+            </el-form-item>
+
+            <el-form-item v-if="backStageMember.includes(updateMemberForm.category) || updateMemberForm.category === 8"
+              label="國籍" prop="country" :rules="formRulesTW.country">
+              <el-select v-model="updateMemberForm.country" placeholder="國籍">
+                <el-option v-for="country in countries" :key="country" :label="country" :value="country" />
+              </el-select>
+            </el-form-item>
+
+            <div v-if="updateMemberForm.category !== 8">
+              <el-form-item label="身分證" prop="idCard" :rules="formRulesTW.idCard">
+                <el-input v-model="updateMemberForm.idCard" />
+              </el-form-item>
+            </div>
+
+
+            <el-form-item label="所屬科部" prop="affiliation" :rules="formRulesTW.affiliation">
               <el-input v-model="updateMemberForm.affiliation">
               </el-input>
             </el-form-item>
@@ -149,10 +163,23 @@
               <el-input v-model="updateMemberForm.jobTitle" />
             </el-form-item>
 
-            <el-form-item label="連絡電話" prop="phone" :rules="formRulesTW.phone">
-              <el-input disabled v-model="updateMemberForm.phone" />
+            <el-form-item label="醫院" prop="receipt" :rules="formRulesTW.receipt">
+              <el-input v-model="updateMemberForm.receipt" />
             </el-form-item>
 
+
+            <div class="extra-form-item-box" v-if="backStageMember.includes(updateMemberForm.category)">
+              <el-form-item class="" label="住宿" prop="food" :rules="formRulesTW.food">
+                <el-input v-model="updateMemberForm.food" placeholder="請輸入住宿需求" />
+              </el-form-item>
+              <el-form-item class="" label="晚宴" prop="foodTaboo" :rules="formRulesTW.foodTaboo">
+                <el-input v-model="updateMemberForm.foodTaboo" placeholder="請輸入晚宴需求" />
+              </el-form-item>
+              <el-form-item class="" label="攜眷" prop="remitAccountLast5" :rules="formRulesTW.remitAccountLast5">
+                <el-input v-model="updateMemberForm.remitAccountLast5" placeholder="是否攜眷" />
+              </el-form-item>
+
+            </div>
             <!-- <el-form-item label="飲食偏好" prop="dietaryPreference">
               <el-radio-group v-model="updateMemberForm.food" placeholder="Select" style="width: 240px;">
                 <el-radio label="葷食" value="葷">
@@ -318,7 +345,7 @@ let memberList = reactive<Record<string, memberRecordType[]>>({
     food: "",
     title: "",
     receipt: "",
-    category: "",
+    category: 0,
     categoryExtra: "",
     foodTaboo: "",
     groupRole: "",
@@ -423,6 +450,8 @@ const cancelClick = () => {
   drawer.value = false
 }
 
+const backStageMember = [4, 5, 6, 7];
+
 //編輯的表單元素本身
 
 const updateMemberFormRef = ref()
@@ -432,7 +461,7 @@ let updateMemberForm = reactive<memberRecordType>({
   group: "",
   title: "",
   receipt: "",
-  category: "",
+  category: 0,
   categoryExtra: "",
   groupRole: "",
   email: "",
@@ -475,7 +504,8 @@ const confirmClick = async () => {
 
 const editRow = (member: any): void => {
   Object.assign(updateMemberForm, member)
-  console.log(updateMemberForm)
+  console.log(updateMemberForm.category)
+  console.log(updateMemberForm.category === 8)
   drawer.value = true
 }
 
