@@ -137,7 +137,7 @@
             </el-form-item>
 
             <el-form-item label="連絡電話" prop="phone" :rules="formRulesTW.phone">
-              <el-input disabled v-model="updateMemberForm.phone" />
+              <el-input v-model="updateMemberForm.phone" />
             </el-form-item>
 
             <el-form-item v-if="backStageMember.includes(updateMemberForm.category) || updateMemberForm.category === 8"
