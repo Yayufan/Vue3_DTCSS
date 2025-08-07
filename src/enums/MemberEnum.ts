@@ -8,7 +8,7 @@ const memberEnums = {
   7: "工作人員",
   8: "醫師",
   9: "護理師",
-  10: "護理師",
+  10: "護理師(慈濟)",
 } as any;
 
 export { memberEnums };
