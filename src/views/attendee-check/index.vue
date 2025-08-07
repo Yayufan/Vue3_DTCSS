@@ -152,9 +152,9 @@
           <el-form-item label="會員信箱">
             <el-text>{{ attendee.member.email }}</el-text>
           </el-form-item>
-          <el-form-item label="飲食偏好">
+          <!-- <el-form-item label="飲食偏好">
             <el-text>{{ attendee.member.food }}</el-text>
-          </el-form-item>
+          </el-form-item> -->
         </el-form>
       </div>
     </el-drawer>
@@ -247,44 +247,29 @@ const checkin = async () => {
     let res = await checkinApi(submitCheckData);
     Object.assign(member, res.data);
     console.log("res", res);
-    let category = "";
-    switch (res.data.attendeesVO.member.category) {
-      case 1:
-        category = "一般會員";
-        break;
-    }
 
-    console.log(res.data.attendeesVO.isLastYearAttendee);
-    // if (submitCheckData.actionType == 2) return;
+    const extraMessage = [4, 5, 6].includes(res.data.attendeesVO.member.category) ?
+      `<p>住宿需求: ${member.attendeesVO.member.food || "無"}</p>
+    <p>晚宴需求: ${member.attendeesVO.member.foodTaboo || "無"}</p>
+    <p>是否攜眷: ${member.attendeesVO.member.accommodation || "無"}</p>`
+      : "";
+
     const type = submitCheckData.actionType == 1 ? "簽到成功" : "簽退成功";
-    if (res.data.attendeesVO.isLastYearAttendee) {
-      ElNotification({
-        title: `會員編號:${res.data.attendeesVO.sequenceNo}`,
-        dangerouslyUseHTMLString: true,
-        message: `<p style="color:green;font-weight:bold;">${type}</p> 會員: ${res.data.attendeesVO.member.chineseName}<br/>會員類別: ${category}<br/> <p style="color:green;">為去年年會參加會員</p>`,
-        duration: 5000,
-        type: "success",
-      });
-    } else {
-      ElNotification({
-        title: `會員編號:${res.data.attendeesVO.sequenceNo}`,
-        dangerouslyUseHTMLString: true,
-        message: `<p style="color:green;font-weight:bold;">${type}</p>會員: ${res.data.attendeesVO.member.chineseName}<br/>會員類別: ${category}<br/><p style="color:red;"> 非去年年會參加會員</p>`,
-        duration: 5000,
-        type: "success",
-      });
-    }
+    ElNotification({
+      title: `會員編號:${res.data.attendeesVO.sequenceNo}`,
+      dangerouslyUseHTMLString: true,
+      message: `<p style="color:green;font-weight:bold;">${type}</p> 
+        會員: ${res.data.attendeesVO.member.chineseName}<br/>
+        會員類別: ${memberEnums[res.data.attendeesVO.member.category]}<br/> 
+        ` + extraMessage,
+      duration: 0,
+      type: "success",
+    });
 
     handleUpdateList();
     getCheckData();
 
   } catch (error) {
-    // console.log(error);
-    // ElMessage({
-    //   dangerouslyUseHTMLString: true,
-    //   message: `<p class='error-msg'>${error}</p>`,
-    //   type: "error",
-    // });
   }
 };
 /**--------------------------------------------------- */
@@ -515,13 +500,13 @@ const handleUpdateList = async () => {
   }
 }
 
-const updateEveryMinute = () => {
+const updateEvery5Minute = () => {
   setInterval(() => {
     console.log("每分鐘更新");
     getCheckData();
     handleSaveLastScrollData();
     handleUpdateList();
-  }, 60000);
+  }, 5 * 60 * 1000);
 };
 /**-------------------------------------------------- */
 let html5Qrcode: any;
@@ -536,7 +521,7 @@ onMounted(() => {
   // getAttendeesList();
   closeSidebar();
   getAttendeeList();
-  updateEveryMinute();
+  updateEvery5Minute();
 });
 
 const isScannable = ref(true);
