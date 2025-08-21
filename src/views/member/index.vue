@@ -147,7 +147,7 @@
               </el-select>
             </el-form-item>
 
-            <div v-if="updateMemberForm.category !== 8">
+            <div v-if="!backStageMember.includes(updateMemberForm.category) && updateMemberForm.category !== 8">
               <el-form-item label="身分證" prop="idCard" :rules="formRulesTW.idCard">
                 <el-input v-model="updateMemberForm.idCard" />
               </el-form-item>
