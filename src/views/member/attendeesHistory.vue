@@ -25,20 +25,20 @@
     <el-dialog class="template-tips" title="下載Excel模板" v-model="downloadDialogIsVisible" width="60%">
       <div class="template-tips-content">
         <ul class="step-list" style="list-style-type: decimal;">
-          <li>下載 Excel模板，透過模板填入資料將往年與會者填入系統</li>
+          <li>下載 Excel模板，透過模板修改 流水號 資料 批量更新進系統</li>
           <li>欄位說明：
             <ul class="sub-list">
-              <li>year 為與會年分，統一填2024即可</li>
+              <li>attendeesId 為與會者ID，請勿更動</li>
               <li>id_card 為身分證字號 或 護照號碼</li>
               <li>email 為電子信箱</li>
               <li>name 為用戶姓名</li>
+              <li>sequence_no 為流水號，請設置為數字正整數</li>
             </ul>
           </li>
           <li>注意事項:
             <ul class="sub-list">
-              <li>id_card ,name 欄位非必填，但email 和 year欄位為必填</li>
-              <li>d_card 和 email 欄位不可有重複的值，否則系統會拒絕匯入</li>
-              <li>如果有傳入 id_card 系統僅會依據此欄位做比對依據，如果沒填寫 id_card ，系統則會根據email欄位做比對依據</li>
+              <li>attendeesId ,sequence_no 欄位為必填，其餘欄位為展示，修改也不更動原始資料</li>
+              <li>attendeesId 和 sequence_no 欄位不可有重複的值，否則系統會拒絕匯入</li>
             </ul>
           </li>
         </ul>
@@ -86,7 +86,7 @@ const downloadExcelTemplate = async () => {
     const url = window.URL.createObjectURL(new Blob([res.data]));
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', '往年與會者模板.xlsx');
+    link.setAttribute('download', '更新與會者模板.xlsx');
     document.body.appendChild(link);
     link.click();
   } catch (error) {
