@@ -156,14 +156,14 @@
 
             <el-form-item class="" label="住宿" prop="food">
 
-              <el-text v-model="attendee.member.food" placeholder="請輸入住宿需求">{{ attendee.member.food }}</el-text>
+              <el-text v-model="attendee.member.food">{{ attendee.member.food }}</el-text>
             </el-form-item>
             <el-form-item class="" label="晚宴" prop="foodTaboo">
-              <el-text v-model="attendee.member.foodTaboo" placeholder="請輸入晚宴需求">{{ attendee.member.foodTaboo
+              <el-text v-model="attendee.member.foodTaboo">{{ attendee.member.foodTaboo
               }}</el-text>
             </el-form-item>
             <el-form-item class="" label="攜眷" prop="remitAccountLast5">
-              <el-text v-model="attendee.member.remitAccountLast5" placeholder="是否攜眷">{{
+              <el-text v-model="attendee.member.remitAccountLast5">{{
                 attendee.member.remitAccountLast5 }}</el-text>
             </el-form-item>
           </div>
@@ -444,7 +444,7 @@ const getAttendeeList = async (resetList: boolean = false) => {
   isLoading.value = true; // 開始加載
   const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
-  await sleep(2000);
+  await sleep(200);
 
 
 
