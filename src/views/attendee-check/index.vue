@@ -1,5 +1,5 @@
 <template>
-  <section class="main-section">
+  <section class="main-section" v-loading="isLoading" element-loading-text="資料更新中...">
     <el-card class="main-card">
       <div class="data-section" v-if="showOtherElement">
         <div class="stats-data-box">
@@ -152,6 +152,21 @@
           <el-form-item label="會員信箱">
             <el-text>{{ attendee.member.email }}</el-text>
           </el-form-item>
+          <div class="extra-form-item-box" v-if="backStageMember.includes(attendee.member.category)">
+
+            <el-form-item class="" label="住宿" prop="food">
+
+              <el-text v-model="attendee.member.food">{{ attendee.member.food }}</el-text>
+            </el-form-item>
+            <el-form-item class="" label="晚宴" prop="foodTaboo">
+              <el-text v-model="attendee.member.foodTaboo">{{ attendee.member.foodTaboo
+              }}</el-text>
+            </el-form-item>
+            <el-form-item class="" label="攜眷" prop="remitAccountLast5">
+              <el-text v-model="attendee.member.remitAccountLast5">{{
+                attendee.member.remitAccountLast5 }}</el-text>
+            </el-form-item>
+          </div>
           <!-- <el-form-item label="飲食偏好">
             <el-text>{{ attendee.member.food }}</el-text>
           </el-form-item> -->
@@ -427,6 +442,11 @@ const getAttendeeList = async (resetList: boolean = false) => {
   if (!hasMoreData.value && !resetList) return;
 
   isLoading.value = true; // 開始加載
+  const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+  await sleep(200);
+
+
 
   try {
     if (resetList) {
@@ -448,6 +468,7 @@ const getAttendeeList = async (resetList: boolean = false) => {
   } catch (error) {
     console.log(error);
   } finally {
+
     isLoading.value = false; // 結束加載
   }
 };
@@ -459,6 +480,9 @@ const handleInput = () => {
 
 const handleUpdateList = async () => {
   await getAttendeeList(true); // 重置
+
+
+
 
   if (lastScrollData.page > 1) {
     const pageToLoad = []; // 儲存要加載的頁碼
@@ -502,7 +526,7 @@ const handleUpdateList = async () => {
 
 const updateEvery5Minute = () => {
   setInterval(() => {
-    console.log("每分鐘更新");
+
     getCheckData();
     handleSaveLastScrollData();
     handleUpdateList();
@@ -585,6 +609,9 @@ watch(
   },
   { immediate: true }
 );
+
+const backStageMember = [4, 5, 6, 7];
+
 </script>
 <style lang="scss" scoped>
 .main-section {
