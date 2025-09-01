@@ -66,6 +66,11 @@
         </el-table-column>
       </el-table>
 
+      <div class="example-pagination-block member-pagination">
+        <el-pagination layout="prev, pager, next" :page-count="Number(tagsTotalPage)" v-model:current-page="currentPage"
+          :hide-on-single-page="true" @current-change="handleTagPageChange" />
+      </div>
+
       <!-- 新增對話框 -->
       <ElDialog v-model="isInsertDialogVisible" title="新增標籤" width="400">
 
@@ -324,10 +329,17 @@ const cancelClick = () => {
 let currentPage = ref(1)
 
 let tagsList = reactive<Record<string, any>>([])
+let tagsTotalPage = ref<number>(0)
 
 const getTagsByPagination = async (page: number, size: number) => {
   const res = await getTagsByPaginationApi(page, size)
   Object.assign(tagsList, res.data)
+  tagsTotalPage.value = res.data.pages
+}
+
+const handleTagPageChange = (page: number) => {
+  currentPage.value = page
+  getTagsByPagination(page, 10)
 }
 
 /** --------- 刪除相關variable及function -------------- */
