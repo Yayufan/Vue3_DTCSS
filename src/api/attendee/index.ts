@@ -55,3 +55,13 @@ export function insertAttendeeOnSiteApi(data: any): AxiosPromise {
     data,
   });
 }
+
+
+/**  臨時增加問卷Excel下載 */
+export function downloadQuestionnaireExcelApi(): AxiosPromise {
+  return request({
+    url: "/questionnaire/download-excel",
+    method: "get",
+    responseType: "arraybuffer",
+  });
+}

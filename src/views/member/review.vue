@@ -23,6 +23,9 @@
           <el-button type="success" @click="downloadCheckinRecordExcel">
             下載簽到記錄Excel
           </el-button>
+          <el-button type="success" @click="downloadQuestionnaireExcel">
+            下載問卷Excel
+          </el-button>
         </div>
       </div>
 
@@ -112,7 +115,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 
 
 import { updateOrdersApi } from '@/api/order'
-import { batchDeleteAttendeesApi, deleteAttendeeApi, downloadAttendeeExcelApi, getAttendeeListByTagAndPaginationApi } from '@/api/attendee'
+import { batchDeleteAttendeesApi, deleteAttendeeApi, downloadAttendeeExcelApi, getAttendeeListByTagAndPaginationApi, downloadQuestionnaireExcelApi } from '@/api/attendee'
 import { downloadCheckinRecordExcelApi } from '@/api/checkin'
 
 
@@ -257,8 +260,20 @@ const downloadCheckinRecordExcel = async () => {
   }
 }
 
-
-
+/** 臨時新增 問卷Excel下載 */
+const downloadQuestionnaireExcel = async () => {
+  try {
+    let res = await downloadQuestionnaireExcelApi()
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', '問卷列表.xlsx');
+    document.body.appendChild(link);
+    link.click();
+  } catch (error) {
+    ElMessage.error("下載失敗" + error)
+  }
+}
 
 
 
